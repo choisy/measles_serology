@@ -109,7 +109,7 @@ Loading all the excel files of the data folder:
 the3files <- path2data |> 
   list.files(full.names = TRUE) |> 
   set_names2() |> 
-  map(read_excel, "Marc")
+  map(read_excel, "Marc", col_types = "text")
 ```
 
 A function that recode sex:
@@ -123,6 +123,18 @@ recode_sex <- function(x) {
 }
 ```
 
+A piece common to all the collections:
+
+```{r}
+common_data_processing <- function(x) {
+  x |> 
+    filter(!if_all(everything(), is.na)) |>
+    recode_sex() |>
+    separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |>
+    mutate(across(titer, as.double))
+}
+```
+
 Combining the last two collections:
 
 ```{r}
@@ -130,18 +142,36 @@ last2collections <- the3files |>
   extract(c("Dec2022", "Apr24")) |> 
   map(select, -c(age, date_collection)) |> 
   bind_rows() |> 
-  dplyr::filter(!if_all(everything(), is.na)) |> 
-  recode_sex() |> 
-  separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |> 
+  common_data_processing() |> 
   mutate(collection_date = ymd(paste(year_collection, month_collection, day_collection,
                                      sep = "-"))) |> 
   select(participant, province, hospital, site, collection, sample_ID, age_group, sex,
          collection_date, plate, titer, conclusion)
 ```
 
+Now to the first collection:
+
+```{r}
+first_collection <- the3files$DEC2019 |> 
+  common_data_processing() |> 
+  mutate(date_chr = if_else( grepl("[./]", date_collection), date_collection, NA),
+         date_num = if_else(!grepl("[./]", date_collection), date_collection, NA),
+         across(date_num, ~ .x |> as.numeric() |> as_date("1899-12-30")),
+         across(date_chr, dmy),
+         collection_date = coalesce(date_num, date_chr)) |> 
+  select(participant, hospital, collection, sample_ID, age_group, sex,
+         collection_date, plate, titer, conclusion)
+```
+
+The total collection:
+
+```{r}
+dataset <- bind_rows(last2collections, first_collection)
+```
+
 Which gives:
 
 ```{r}
-last2collections
+dataset
 ```
 

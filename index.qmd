@@ -166,12 +166,64 @@ first_collection <- the3files$DEC2019 |>
 The total collection:
 
 ```{r}
-dataset <- bind_rows(last2collections, first_collection)
+dataset <- last2collections |>
+  bind_rows(first_collection) |> 
+  mutate(year = year(collection_date),
+         time_point = case_match(year, 2019:2020 ~ "T1",
+                                       2022:2023 ~ "T2", .default = "T3")) |> 
+  select(-year)
 ```
 
 Which gives:
 
 ```{r}
 dataset
+```
+
+
+## Testing the data
+
+```{r}
+map_int(dataset, ~ sum(is.na(.x)))
+```
+
+```{r}
+dataset |> 
+  mutate(year = year(collection_date)) |> 
+  filter(year > 2100)
+```
+
+```{r}
+dataset |> 
+  mutate(year = year(collection_date)) |> 
+  group_by(year) |> 
+  tally()
+```
+
+```{r}
+dataset |> 
+  mutate(year = year(collection_date),
+         month = month(collection_date)) |> 
+  filter(year == 2020) |> 
+  group_by(month) |> 
+  tally()
+```
+
+
+
+```{r}
+length(unique(dataset$hospital))
+```
+
+```{r}
+table(dataset$collection)
+```
+
+
+```{r}
+dataset |> 
+  group_by(hospital, collection) |> 
+  tally() |> 
+  print(n = Inf)
 ```
 

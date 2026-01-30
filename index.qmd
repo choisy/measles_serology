@@ -55,19 +55,22 @@ knitr::opts_chunk$set(margin1    = TRUE,
 
 ## Contants
 
+The path to the data folder:
+
 ```{r}
 if (grepl("arc|hoisy", Sys.getenv("USER"))) {
   path2data <- paste0("~/Library/CloudStorage/OneDrive-OxfordUniversityClinical",
-                      "ResearchUnit/GitHub/choisy/measles_serology/")
+                      "ResearchUnit/GitHub/choisy/measles serology/")
 }
 ```
+
 
 ## Packages
 
 Required packages:
 
 ```{r}
-required <- c("readxl")
+required <- c("readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr", "lubridate")
 ```
 
 Installing those that are not installed yet:
@@ -82,3 +85,63 @@ Loading the packages for interactive use:
 ```{r warning = FALSE, message = FALSE}
 invisible(sapply(required, library, character.only = TRUE))
 ```
+
+
+## Functions
+
+A function that generates names of a vector of character strings from its content:
+
+```{r}
+set_names2 <- function(x) {
+  setNames(x, x |>
+             str_remove("^.*_") |> 
+             str_remove("^.*-") |> 
+             str_remove(".xlsx$"))
+}
+```
+
+
+## Loading data
+
+Loading all the excel files of the data folder:
+
+```{r}
+the3files <- path2data |> 
+  list.files(full.names = TRUE) |> 
+  set_names2() |> 
+  map(read_excel, "Marc")
+```
+
+A function that recode sex:
+
+```{r}
+recode_sex <- function(x) {
+  sex_val <- sort(unique(x$sex))
+  males   <- grep("^M|na", sex_val, TRUE, value = TRUE)
+  females <- grep("^M|na", sex_val, TRUE, value = TRUE, invert = TRUE)
+  mutate(x, across(sex, ~ case_match(.x, males ~ "male", females ~ "female")))
+}
+```
+
+Combining the last two collections:
+
+```{r}
+last2collections <- the3files |> 
+  extract(c("Dec2022", "Apr24")) |> 
+  map(select, -c(age, date_collection)) |> 
+  bind_rows() |> 
+  dplyr::filter(!if_all(everything(), is.na)) |> 
+  recode_sex() |> 
+  separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |> 
+  mutate(collection_date = ymd(paste(year_collection, month_collection, day_collection,
+                                     sep = "-"))) |> 
+  select(participant, province, hospital, site, collection, sample_ID, age_group, sex,
+         collection_date, plate, titer, conclusion)
+```
+
+Which gives:
+
+```{r}
+last2collections
+```
+

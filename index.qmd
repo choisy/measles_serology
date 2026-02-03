@@ -183,15 +183,45 @@ dataset
 
 ## Testing the data
 
+Let's look at the number of missing values for each variable:
+
 ```{r}
 map_int(dataset, ~ sum(is.na(.x)))
 ```
 
+Let's look at the number of sample per time point:
+
+```{r}
+dataset |>
+  group_by(time_point) |> 
+  tally()
+```
+
+214 and 213 samples are missing for the last two time points respectively.
+
 ```{r}
 dataset |> 
-  mutate(year = year(collection_date)) |> 
-  filter(year > 2100)
+  group_by(time_point, hospital) |> 
+  tally() |> 
+  print(n = Inf)
 ```
+
+
+```{r}
+dataset |> 
+  group_by(time_point, hospital) |> 
+  tally() |> 
+  filter(! n %in% c(75, 125, 200))
+```
+
+
+
+
+
+
+
+
+
 
 ```{r}
 dataset |> 

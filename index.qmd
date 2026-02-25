@@ -119,11 +119,11 @@ recode_sex <- function(x) {
   sex_val <- sort(unique(x$sex))
   males   <- grep("^M|na", sex_val, TRUE, value = TRUE)
   females <- grep("^M|na", sex_val, TRUE, value = TRUE, invert = TRUE)
-  mutate(x, across(sex, ~ case_match(.x, males ~ "male", females ~ "female")))
+  mutate(x, across(sex, ~ recode_values(.x, males ~ "male", females ~ "female")))
 }
 ```
 
-A piece common to all the collections:
+A piece of code common to all the collections:
 
 ```{r}
 common_data_processing <- function(x) {
@@ -168,9 +168,23 @@ The total collection:
 ```{r}
 dataset <- last2collections |>
   bind_rows(first_collection) |> 
-  mutate(year = year(collection_date),
-         time_point = case_match(year, 2019:2020 ~ "T1",
-                                       2022:2023 ~ "T2", .default = "T3")) |> 
+  mutate(province = ifelse(is.na(province), hospital, province),
+         across(province, ~ recode_values(.x, "AG" ~ "An Giang",
+                                              "BD" ~ "Binh Dinh",
+                                              "DL" ~ "Dak Lak",
+                                              "DT" ~ "Dong Thap",
+                                              "HC" ~ "HCMC",
+                                              "HU" ~ "Hue",
+                                              "KG" ~ "Kien Giang",
+                                              "KH" ~ "Khanh Hoa",
+                                              "QN" ~ "Quang Ngai",
+                                              "ST" ~ "Soc Trang",
+                                              "Daklak" ~ "Dak Lak",
+                                              "HUE" ~ "Hue",
+                                              "HCM" ~ "HCMC", default = .x)),
+         year = year(collection_date),
+         time_point = recode_values(year, 2019:2020 ~ "T1",
+                                          2022:2023 ~ "T2", default = "T3")) |> 
   select(-year)
 ```
 
@@ -187,6 +201,11 @@ Let's look at the number of missing values for each variable:
 
 ```{r}
 map_int(dataset, ~ sum(is.na(.x)))
+```
+
+```{r}
+dataset |> 
+  filter(is.na(age_group))
 ```
 
 Let's look at the number of sample per time point:
@@ -206,22 +225,12 @@ dataset |>
   print(n = Inf)
 ```
 
-
 ```{r}
 dataset |> 
   group_by(time_point, hospital) |> 
   tally() |> 
   filter(! n %in% c(75, 125, 200))
 ```
-
-
-
-
-
-
-
-
-
 
 ```{r}
 dataset |> 
@@ -239,8 +248,6 @@ dataset |>
   tally()
 ```
 
-
-
 ```{r}
 length(unique(dataset$hospital))
 ```
@@ -249,11 +256,11 @@ length(unique(dataset$hospital))
 table(dataset$collection)
 ```
 
-
 ```{r}
 dataset |> 
   group_by(hospital, collection) |> 
   tally() |> 
   print(n = Inf)
 ```
+
 

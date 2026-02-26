@@ -300,6 +300,19 @@ abline(h = hz_lines, col = "grey")
 text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$province))
 ```
 
+An alternative representation:
+
+```{r fig-cum_nb_sample, fig.width = 7, fig.height = 5}
+plot(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), axes = FALSE,
+     xlab = NA, ylab = "cumulative number of samples")
+axis(1, ymd(paste(lb, "0101")), lb); axis(2)
+
+dataset |> 
+  group_by(province, collection_date) |> 
+  tally() |> 
+  group_modify(~ mutate(.x, cumn = cumsum(n))) |> 
+  group_walk(~ with(.x, lines(collection_date, cumn, type = "s", col = 4)))
+```
 
 
 

@@ -75,7 +75,8 @@ if (grepl("arc|hoisy", Sys.getenv("USER"))) {
 Required packages:
 
 ```{r}
-required <- c("readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr", "lubridate")
+required <- c("sf", "readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr",
+              "lubridate")
 ```
 
 Installing those that are not installed yet:
@@ -144,6 +145,7 @@ Loading all the excel files of the data folder:
 ```{r}
 the3files <- path2data |> 
   list.files(full.names = TRUE) |> 
+  grep("gadm", x = _, value = TRUE, invert = TRUE) |> 
   set_names2() |> 
   map(read_excel, "Marc", col_types = "text")
 ```
@@ -176,7 +178,6 @@ Combining the last two collections:
 ```{r}
 last2collections <- the3files |> 
   extract(c("Dec2022", "Apr24")) |> 
-#  map(select, -c(age, date_collection)) |> 
   map(select, -date_collection) |> 
   bind_rows() |> 
   common_data_processing() |> 
@@ -257,6 +258,40 @@ Which gives:
 
 ```{r}
 dataset
+```
+
+
+## Sampling locations
+
+Loading the `sf` object of the provinces of Vietnam:
+
+```{r}
+gadm1 <- readRDS(paste0(path2data, "gadm36_VNM_1_sf.rds"))
+st_crs(gadm1) <- st_crs(gadm1)
+```
+
+Plotting the provinces from which samples where collected:
+
+```{r fig-map, fig.height = 6}
+sel <- dataset |>
+  pull(province) |> 
+  unique() |> 
+  str_replace("Hue", "Thua Thien Hue") |> 
+  str_replace("HCMC", "Ho Chi Minh")
+
+opar <- par(plt = rep(0:1, 2))
+
+gadm1 |> 
+  st_geometry() |> 
+  plot(col = "lightyellow")
+
+
+gadm1 |> 
+  filter(VARNAME_1 %in% sel) |> 
+  st_geometry() |> 
+  plot(add = TRUE, col = 2)
+
+par(opar)
 ```
 
 

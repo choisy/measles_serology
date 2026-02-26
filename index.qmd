@@ -118,6 +118,24 @@ text2 <- function(x, y, labels, cex = 1,
 }
 ```
 
+Tuning of the `rgb()` function:
+
+```{r}
+rgb2 <- function(...) rgb(..., maxColorValue = 255)
+```
+
+A tuning of the `pie()` function:
+
+```{r}
+pie2 <- function(x, ...) {
+  if (all(x == 0)) {
+    plot(1, ann = FALSE, axes = FALSE, type = "n")
+  } else {
+    pie(x, ...)
+  }
+}
+```
+
 
 ## Loading data
 
@@ -320,9 +338,25 @@ Yet another representation:
 dataset |> 
   group_by(collection_date) |> 
   tally() |> 
-  with(plot(collection_date, n, type = "h", col = "4", xlab = NA, ylab = "sampling intensity (/day)"))
+  with(plot(collection_date, n, type = "h", col = "4", xlab = NA,
+            ylab = "sampling intensity (/day)"))
 ```
 
+Gender distribution:
+
+```{r fig-sex_distribution, fig.width = .7 * 7, fig.height = .7 * 50 / 3}
+opar <- par(mfcol = c(10, 3), plt = c(.05, .95, .01, .91))
+dataset |> 
+  with(table(sex, province, time_point)) |> 
+  as.data.frame() |> 
+  group_by(time_point, province) |> 
+  group_split() |> 
+  walk(~ with(.x, {
+    pie2(Freq, NA, col = c(rgb2(247, 114, 184), rgb2(62, 146, 247)))
+    mtext(province[1], line = -.5)
+  }))
+par(opar)
+```
 
 
 

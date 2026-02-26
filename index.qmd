@@ -314,6 +314,16 @@ dataset |>
   group_walk(~ with(.x, lines(collection_date, cumn, type = "s", col = 4)))
 ```
 
+Yet another representation:
+
+```{r fig-sampling_intensity, fig.width = 7, fig.height = 5}
+dataset |> 
+  group_by(collection_date) |> 
+  tally() |> 
+  with(plot(collection_date, n, type = "h", col = "4", xlab = NA, ylab = "sampling intensity (/day)"))
+```
+
+
 
 
 

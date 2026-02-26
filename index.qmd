@@ -140,13 +140,14 @@ Combining the last two collections:
 ```{r}
 last2collections <- the3files |> 
   extract(c("Dec2022", "Apr24")) |> 
-  map(select, -c(age, date_collection)) |> 
+#  map(select, -c(age, date_collection)) |> 
+  map(select, -date_collection) |> 
   bind_rows() |> 
   common_data_processing() |> 
   mutate(collection_date = ymd(paste(year_collection, month_collection, day_collection,
                                      sep = "-"))) |> 
-  select(participant, province, hospital, site, collection, sample_ID, age_group, sex,
-         collection_date, plate, titer, conclusion)
+  select(participant, province, hospital, site, collection, sample_ID, age_group, age,
+         sex, collection_date, plate, titer, conclusion)
 ```
 
 Now to the first collection:
@@ -159,13 +160,13 @@ first_collection <- the3files$DEC2019 |>
          across(date_num, ~ .x |> as.numeric() |> as_date("1899-12-30")),
          across(date_chr, dmy),
          collection_date = coalesce(date_num, date_chr)) |> 
-  select(participant, hospital, collection, sample_ID, age_group, sex,
+  select(participant, hospital, collection, sample_ID, age_group, age, sex,
          collection_date, plate, titer, conclusion)
 ```
 
 The total collection:
 
-```{r}
+```{r warning = FALSE}
 dataset <- last2collections |>
   bind_rows(first_collection) |> 
   mutate(province = ifelse(is.na(province), hospital, province),
@@ -184,8 +185,36 @@ dataset <- last2collections |>
                                               "HCM" ~ "HCMC", default = .x)),
          year = year(collection_date),
          time_point = recode_values(year, 2019:2020 ~ "T1",
-                                          2022:2023 ~ "T2", default = "T3")) |> 
-  select(-year)
+                                          2022:2023 ~ "T2", default = "T3"),
+         across(age, ~ ifelse(participant == "0158" & province == "Dak Lak" &
+                                collection == "42", "48", .x)),
+         age_unit = str_remove_all(age, "\\d"),
+         age2 = as.numeric(str_remove_all(age, "\\D")),
+         age3 = as.numeric(age),
+         age4 = ifelse(is.na(age3), ifelse(age_unit %in% c("M", "th"), age2 / 12,
+                                           ifelse(age_unit == "ng", age2 / 365, age2)),
+                       age3),
+         age = ifelse(age4 > 100, year - age4, age4),
+         age_group = cut(age, c(0:20, seq(25, 70, 5), 100), right = FALSE)) |> 
+  select(-c(year, age_unit, age2, age3, age4, hospital)) |> 
+  arrange(time_point, province, age_group, collection_date)
+```
+
+A hash table to generate site ID from province names:
+
+```{r}
+hash <- dataset |> 
+  filter_out(time_point == "T1") |> 
+  filter(age > 20) |> 
+  select(province, site) |> 
+  unique() |> 
+  with(setNames(site, province))
+```
+
+Completing the site ID:
+
+```{r}
+dataset <- mutate(dataset, across(site, ~ ifelse(is.na(.x), hash[province], .x)))
 ```
 
 Which gives:
@@ -195,72 +224,18 @@ dataset
 ```
 
 
-## Testing the data
+## Overview of the data
 
-Let's look at the number of missing values for each variable:
+Number of sample per site per time point:
 
 ```{r}
-map_int(dataset, ~ sum(is.na(.x)))
+with(dataset, table(province, time_point))
 ```
 
 ```{r}
-dataset |> 
-  filter(is.na(age_group))
+with(dataset, table(age_group, province, time_point))
 ```
 
-Let's look at the number of sample per time point:
 
-```{r}
-dataset |>
-  group_by(time_point) |> 
-  tally()
-```
-
-214 and 213 samples are missing for the last two time points respectively.
-
-```{r}
-dataset |> 
-  group_by(time_point, hospital) |> 
-  tally() |> 
-  print(n = Inf)
-```
-
-```{r}
-dataset |> 
-  group_by(time_point, hospital) |> 
-  tally() |> 
-  filter(! n %in% c(75, 125, 200))
-```
-
-```{r}
-dataset |> 
-  mutate(year = year(collection_date)) |> 
-  group_by(year) |> 
-  tally()
-```
-
-```{r}
-dataset |> 
-  mutate(year = year(collection_date),
-         month = month(collection_date)) |> 
-  filter(year == 2020) |> 
-  group_by(month) |> 
-  tally()
-```
-
-```{r}
-length(unique(dataset$hospital))
-```
-
-```{r}
-table(dataset$collection)
-```
-
-```{r}
-dataset |> 
-  group_by(hospital, collection) |> 
-  tally() |> 
-  print(n = Inf)
-```
 
 

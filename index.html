@@ -86,7 +86,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages"><span class="header-section-number">2</span> Packages</a></li>
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions"><span class="header-section-number">3</span> Functions</a></li>
   <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data"><span class="header-section-number">4</span> Loading data</a></li>
-  <li><a href="#testing-the-data" id="toc-testing-the-data" class="nav-link" data-scroll-target="#testing-the-data"><span class="header-section-number">5</span> Testing the data</a></li>
+  <li><a href="#overview-of-the-data" id="toc-overview-of-the-data" class="nav-link" data-scroll-target="#overview-of-the-data"><span class="header-section-number">5</span> Overview of the data</a></li>
   </ul>
 </nav>
 </div>
@@ -181,13 +181,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>last2collections <span class="ot">&lt;-</span> the3files <span class="sc">|&gt;</span> </span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract</span>(<span class="fu">c</span>(<span class="st">"Dec2022"</span>, <span class="st">"Apr24"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(select, <span class="sc">-</span><span class="fu">c</span>(age, date_collection)) <span class="sc">|&gt;</span> </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">collection_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(year_collection, month_collection, day_collection,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">sep =</span> <span class="st">"-"</span>))) <span class="sc">|&gt;</span> </span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, hospital, site, collection, sample_ID, age_group, sex,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>         collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  map(select, -c(age, date_collection)) |&gt; </span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(select, <span class="sc">-</span>date_collection) <span class="sc">|&gt;</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">collection_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(year_collection, month_collection, day_collection,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">sep =</span> <span class="st">"-"</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, hospital, site, collection, sample_ID, age_group, age,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>         sex, collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now to the first collection:</p>
 <div class="cell" data-layout-align="center">
@@ -198,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_num, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>() <span class="sc">|&gt;</span> <span class="fu">as_date</span>(<span class="st">"1899-12-30"</span>)),</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_chr, dmy),</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">collection_date =</span> <span class="fu">coalesce</span>(date_num, date_chr)) <span class="sc">|&gt;</span> </span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, hospital, collection, sample_ID, age_group, sex,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, hospital, collection, sample_ID, age_group, age, sex,</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>         collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The total collection:</p>
@@ -221,231 +222,285 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HCM"</span> <span class="sc">~</span> <span class="st">"HCMC"</span>, <span class="at">default =</span> .x)),</span>
 <span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(collection_date),</span>
 <span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">time_point =</span> <span class="fu">recode_values</span>(year, <span class="dv">2019</span><span class="sc">:</span><span class="dv">2020</span> <span class="sc">~</span> <span class="st">"T1"</span>,</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>                                          <span class="dv">2022</span><span class="sc">:</span><span class="dv">2023</span> <span class="sc">~</span> <span class="st">"T2"</span>, <span class="at">default =</span> <span class="st">"T3"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>year)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>                                          <span class="dv">2022</span><span class="sc">:</span><span class="dv">2023</span> <span class="sc">~</span> <span class="st">"T2"</span>, <span class="at">default =</span> <span class="st">"T3"</span>),</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(age, <span class="sc">~</span> <span class="fu">ifelse</span>(participant <span class="sc">==</span> <span class="st">"0158"</span> <span class="sc">&amp;</span> province <span class="sc">==</span> <span class="st">"Dak Lak"</span> <span class="sc">&amp;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>                                collection <span class="sc">==</span> <span class="st">"42"</span>, <span class="st">"48"</span>, .x)),</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_unit =</span> <span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>),</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">age2 =</span> <span class="fu">as.numeric</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>)),</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">age3 =</span> <span class="fu">as.numeric</span>(age),</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">age4 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(age3), <span class="fu">ifelse</span>(age_unit <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"M"</span>, <span class="st">"th"</span>), age2 <span class="sc">/</span> <span class="dv">12</span>,</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>                                           <span class="fu">ifelse</span>(age_unit <span class="sc">==</span> <span class="st">"ng"</span>, age2 <span class="sc">/</span> <span class="dv">365</span>, age2)),</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>                       age3),</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">age =</span> <span class="fu">ifelse</span>(age4 <span class="sc">&gt;</span> <span class="dv">100</span>, year <span class="sc">-</span> age4, age4),</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_group =</span> <span class="fu">cut</span>(age, <span class="fu">c</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>, <span class="fu">seq</span>(<span class="dv">25</span>, <span class="dv">70</span>, <span class="dv">5</span>), <span class="dv">100</span>), <span class="at">right =</span> <span class="cn">FALSE</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(year, age_unit, age2, age3, age4, hospital)) <span class="sc">|&gt;</span> </span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(time_point, province, age_group, collection_date)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>A hash table to generate site ID from province names:</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>hash <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(time_point <span class="sc">==</span> <span class="st">"T1"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(age <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(province, site) <span class="sc">|&gt;</span> </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">setNames</span>(site, province))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Completing the site ID:</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> <span class="fu">mutate</span>(dataset, <span class="fu">across</span>(site, <span class="sc">~</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(.x), hash[province], .x)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Which gives:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dataset</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dataset</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5,573 × 13
-   participant province hospital site  collection sample_ID      age_group sex  
-   &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;          &lt;chr&gt;     &lt;chr&gt;
- 1 0076        An Giang BV DK AG 119   06         20FL-119-0600… 15≤ &amp; &lt;16 male 
- 2 0077        An Giang BV DK AG 119   06         20FL-119-0600… 15≤ &amp; &lt;16 male 
- 3 0078        An Giang BV DK AG 119   06         20FL-119-0600… 15≤ &amp; &lt;16 male 
- 4 0079        An Giang BV DK AG 119   06         20FL-119-0600… 15≤ &amp; &lt;16 fema…
- 5 0080        An Giang BV DK AG 119   06         20FL-119-0600… 15≤ &amp; &lt;16 fema…
- 6 0081        An Giang BV DK AG 119   06         20FL-119-0600… 16≤ &amp; &lt;17 fema…
- 7 0082        An Giang BV DK AG 119   06         20FL-119-0600… 16≤ &amp; &lt;17 fema…
- 8 0083        An Giang BV DK AG 119   06         20FL-119-0600… 16≤ &amp; &lt;17 fema…
- 9 0084        An Giang BV DK AG 119   06         20FL-119-0600… 16≤ &amp; &lt;17 male 
-10 0085        An Giang BV DK AG 119   06         20FL-119-0600… 16≤ &amp; &lt;17 fema…
+   participant province site  collection sample_ID age_group   age sex   
+   &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;     &lt;fct&gt;     &lt;dbl&gt; &lt;chr&gt; 
+ 1 0033        An Giang 119   42         AG420033  [9,10)        9 female
+ 2 0060        An Giang 119   42         AG420060  [9,10)        9 female
+ 3 0016        An Giang 119   42         AG420016  [14,15)      14 male  
+ 4 0036        An Giang 119   42         AG420036  [14,15)      14 female
+ 5 0040        An Giang 119   42         AG420040  [14,15)      14 female
+ 6 0022        An Giang 119   42         AG420022  [15,16)      15 female
+ 7 0037        An Giang 119   42         AG420037  [15,16)      15 female
+ 8 0042        An Giang 119   42         AG420042  [15,16)      15 male  
+ 9 0009        An Giang 119   42         AG420009  [16,17)      16 female
+10 0013        An Giang 119   42         AG420013  [16,17)      16 female
 # ℹ 5,563 more rows
 # ℹ 5 more variables: collection_date &lt;date&gt;, plate &lt;chr&gt;, titer &lt;dbl&gt;,
 #   conclusion &lt;chr&gt;, time_point &lt;chr&gt;</code></pre>
 </div>
 </div>
 </section>
-<section id="testing-the-data" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="testing-the-data"><span class="header-section-number">5</span> Testing the data</h2>
-<p>Let’s look at the number of missing values for each variable:</p>
+<section id="overview-of-the-data" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="overview-of-the-data"><span class="header-section-number">5</span> Overview of the data</h2>
+<p>Number of sample per site per time point:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map_int</span>(dataset, <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.x)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">with</span>(dataset, <span class="fu">table</span>(province, time_point))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    participant        province        hospital            site      collection 
-              0               0               0            2000               0 
-      sample_ID       age_group             sex collection_date           plate 
-              0             200               0               0               0 
-          titer      conclusion      time_point 
-              0               0               0 </code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.na</span>(age_group))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 200 × 13
-   participant province  hospital site  collection sample_ID age_group sex   
-   &lt;chr&gt;       &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt; 
- 1 0001        Soc Trang ST       &lt;NA&gt;  42         ST420001  &lt;NA&gt;      female
- 2 0002        Soc Trang ST       &lt;NA&gt;  42         ST420002  &lt;NA&gt;      male  
- 3 0003        Soc Trang ST       &lt;NA&gt;  42         ST420003  &lt;NA&gt;      female
- 4 0004        Soc Trang ST       &lt;NA&gt;  42         ST420004  &lt;NA&gt;      female
- 5 0005        Soc Trang ST       &lt;NA&gt;  42         ST420005  &lt;NA&gt;      male  
- 6 0006        Soc Trang ST       &lt;NA&gt;  42         ST420006  &lt;NA&gt;      female
- 7 0007        Soc Trang ST       &lt;NA&gt;  42         ST420007  &lt;NA&gt;      male  
- 8 0008        Soc Trang ST       &lt;NA&gt;  42         ST420008  &lt;NA&gt;      male  
- 9 0009        Soc Trang ST       &lt;NA&gt;  42         ST420009  &lt;NA&gt;      male  
-10 0010        Soc Trang ST       &lt;NA&gt;  42         ST420010  &lt;NA&gt;      female
-# ℹ 190 more rows
-# ℹ 5 more variables: collection_date &lt;date&gt;, plate &lt;chr&gt;, titer &lt;dbl&gt;,
-#   conclusion &lt;chr&gt;, time_point &lt;chr&gt;</code></pre>
-</div>
-</div>
-<p>Let’s look at the number of sample per time point:</p>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point) <span class="sc">|&gt;</span> </span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 2
-  time_point     n
-  &lt;chr&gt;      &lt;int&gt;
-1 T1          2000
-2 T2          1786
-3 T3          1787</code></pre>
-</div>
-</div>
-<p>214 and 213 samples are missing for the last two time points respectively.</p>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, hospital) <span class="sc">|&gt;</span> </span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 34 × 3
-# Groups:   time_point [3]
-   time_point hospital          n
-   &lt;chr&gt;      &lt;chr&gt;         &lt;int&gt;
- 1 T1         AG              200
- 2 T1         BD              200
- 3 T1         DL              200
- 4 T1         DT              200
- 5 T1         HC              200
- 6 T1         HU              200
- 7 T1         KG              200
- 8 T1         KH              200
- 9 T1         QN              200
-10 T1         ST              200
-11 T2         BV DK AG        125
-12 T2         BV DK ST        125
-13 T2         BV DKBD         200
-14 T2         BV DKKH         200
-15 T2         BV DKQN         200
-16 T2         BV DKVTN        200
-17 T2         BV Nhi đồng 1    75
-18 T2         BV sản nhi AG    75
-19 T2         BV sản nhi ST    75
-20 T2         BVDK DT         200
-21 T2         BVTWH           200
-22 T2         HTD             111
-23 T3         BV DK AG        125
-24 T3         BV DK ST        125
-25 T3         BV Nhi đồng 1    75
-26 T3         BV sản nhi AG    75
-27 T3         BV sản nhi ST    75
-28 T3         BVDKBD          200
-29 T3         BVDKDT          200
-30 T3         BVDKKH          200
-31 T3         BVDKQN          200
-32 T3         BVDKVTN         200
-33 T3         BVTWH           200
-34 T3         HTD             112</code></pre>
+<pre><code>            time_point
+province      T1  T2  T3
+  An Giang   200 200 200
+  Binh Dinh  200 200 200
+  Dak Lak    200 200 200
+  Dong Thap  200 200 200
+  HCMC       200 186 187
+  Hue        200 200 200
+  Khanh Hoa  200 200 200
+  Kien Giang 200   0   0
+  Quang Ngai 200 200 200
+  Soc Trang  200 200 200</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, hospital) <span class="sc">|&gt;</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span> n <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">75</span>, <span class="dv">125</span>, <span class="dv">200</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">with</span>(dataset, <span class="fu">table</span>(age_group, province, time_point))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-# Groups:   time_point [2]
-  time_point hospital     n
-  &lt;chr&gt;      &lt;chr&gt;    &lt;int&gt;
-1 T2         HTD        111
-2 T3         HTD        112</code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(collection_date)) <span class="sc">|&gt;</span> </span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">|&gt;</span> </span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 2
-   year     n
-  &lt;dbl&gt; &lt;int&gt;
-1  2019  1968
-2  2020    32
-3  2022  1472
-4  2023   314
-5  2024  1787</code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(collection_date),</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">month =</span> <span class="fu">month</span>(collection_date)) <span class="sc">|&gt;</span> </span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2020</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">|&gt;</span> </span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 2
-  month     n
-  &lt;dbl&gt; &lt;int&gt;
-1     1    32</code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(dataset<span class="sc">$</span>hospital))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 27</code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(dataset<span class="sc">$</span>collection)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-  06   10   42   59   63 
-1786 1787 1400  400  200 </code></pre>
-</div>
-</div>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(hospital, collection) <span class="sc">|&gt;</span> </span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 34 × 3
-# Groups:   hospital [27]
-   hospital      collection     n
-   &lt;chr&gt;         &lt;chr&gt;      &lt;int&gt;
- 1 AG            42           200
- 2 BD            42           200
- 3 BV DK AG      06           125
- 4 BV DK AG      10           125
- 5 BV DK ST      06           125
- 6 BV DK ST      10           125
- 7 BV DKBD       06           200
- 8 BV DKKH       06           200
- 9 BV DKQN       06           200
-10 BV DKVTN      06           200
-11 BV Nhi đồng 1 06            75
-12 BV Nhi đồng 1 10            75
-13 BV sản nhi AG 06            75
-14 BV sản nhi AG 10            75
-15 BV sản nhi ST 06            75
-16 BV sản nhi ST 10            75
-17 BVDK DT       06           200
-18 BVDKBD        10           200
-19 BVDKDT        10           200
-20 BVDKKH        10           200
-21 BVDKQN        10           200
-22 BVDKVTN       10           200
-23 BVTWH         06           200
-24 BVTWH         10           200
-25 DL            42           200
-26 DT            42           200
-27 HC            63           200
-28 HTD           06           111
-29 HTD           10           112
-30 HU            59           200
-31 KG            42           200
-32 KH            59           200
-33 QN            42           200
-34 ST            42           200</code></pre>
+<pre><code>, , time_point = T1
+
+          province
+age_group  An Giang Binh Dinh Dak Lak Dong Thap HCMC Hue Khanh Hoa Kien Giang
+  [0,1)           0         0       5         0    1   5         5          0
+  [1,2)           0         5       5         5    4   0         4          6
+  [2,3)           0         5       0         8    3   5         3          7
+  [3,4)           0         5       5         2    5   5         3          3
+  [4,5)           0         5       5         5    6   5         5          9
+  [5,6)           0         5       5         5    4   5         5          7
+  [6,7)           0         5       5         5    4   5         5          5
+  [7,8)           0         5       5         5    8   5         5          2
+  [8,9)           0         5       5         5    3   5         5          3
+  [9,10)          2         5       5         5    7   5         5          2
+  [10,11)         0         5       5         5    6   5         5          2
+  [11,12)         0         5       5         5    3   5         5          1
+  [12,13)         0         5       5         5    0   5         5          2
+  [13,14)         0         5       5         2    7   8         5          3
+  [14,15)         3         5       5         8    4   2         5          1
+  [15,16)         3         5       5         5    7   5         5          1
+  [16,17)         6         5       5         5    5   5         5          1
+  [17,18)         5         5       5         5    8   5         5          2
+  [18,19)        19         5       5         5    5   5         5          4
+  [19,20)        22         5       5         5    4   5         5          4
+  [20,25)        17        13      13        13   16  13        13         10
+  [25,30)        16         8      11        10    8   9        10         20
+  [30,35)        17        12       8        11    8  10         9         19
+  [35,40)        20        11      12         9   10  12        11         22
+  [40,45)         7         9       8        11   11   8        10         16
+  [45,50)         8         9      13         8   12  11        10         11
+  [50,55)        13        11       9        13   12  11        10         12
+  [55,60)        17        12      11         8    8  10         9          5
+  [60,65)         9         5       7        11   11  10        11          8
+  [65,70)         6        12      12        10    9   7        10          6
+  [70,100)       10         3       1         1    1   4         2          6
+          province
+age_group  Quang Ngai Soc Trang
+  [0,1)             1         0
+  [1,2)             4         0
+  [2,3)             7         0
+  [3,4)             3         0
+  [4,5)             5         0
+  [5,6)             5         0
+  [6,7)             5         0
+  [7,8)             5         0
+  [8,9)             5         0
+  [9,10)            5         0
+  [10,11)           5         0
+  [11,12)           5         1
+  [12,13)           5         0
+  [13,14)           5         0
+  [14,15)           5         0
+  [15,16)           5        10
+  [16,17)           5         9
+  [17,18)           5        12
+  [18,19)           5        14
+  [19,20)           5        19
+  [20,25)          14        10
+  [25,30)           9        15
+  [30,35)          11        15
+  [35,40)          11        24
+  [40,45)           9        11
+  [45,50)           9        11
+  [50,55)           9         5
+  [55,60)          11         8
+  [60,65)          11        13
+  [65,70)          10        11
+  [70,100)          1        12
+
+, , time_point = T2
+
+          province
+age_group  An Giang Binh Dinh Dak Lak Dong Thap HCMC Hue Khanh Hoa Kien Giang
+  [0,1)           5         5       5         5    5   5         5          0
+  [1,2)           5         5       5         5    5   5         5          0
+  [2,3)           5         5       5         5    5   5         5          0
+  [3,4)           5         5       5         5    5   5         5          0
+  [4,5)           5         5       5         5    5   5         5          0
+  [5,6)           5         5       5         5    5   5         5          0
+  [6,7)           5         5       5         5    5   5         5          0
+  [7,8)           5         5       5         5    5   5         5          0
+  [8,9)           5         5       5         5    5   5         5          0
+  [9,10)          5         5       5         5    5   5         5          0
+  [10,11)         5         5       5         5    5   5         5          0
+  [11,12)         5         5       4         5    5   5         5          0
+  [12,13)         5         5       6         5    5   5         5          0
+  [13,14)         5         5       5         5    5   5         5          0
+  [14,15)         5         5       5         5    5   5         5          0
+  [15,16)         5         5       5         5    0   5         5          0
+  [16,17)         5         5       5         5    0   5         5          0
+  [17,18)         5         5       5         5    3   5         5          0
+  [18,19)         5         5       5         5    5   5         5          0
+  [19,20)         5         5       5         5    3   5         5          0
+  [20,25)        10        10      10        10   10  10        10          0
+  [25,30)        10        10      10        10   10  10        10          0
+  [30,35)        10        10      10        10   10  10        10          0
+  [35,40)        10        10      10        10   10  10        10          0
+  [40,45)        10        10      10        10   10  10        10          0
+  [45,50)        10        10      10        10   10  10        10          0
+  [50,55)        10        10      10        10   10  10        10          0
+  [55,60)        10        10      10        10   10  10        10          0
+  [60,65)        10        10      10        10   10  10        10          0
+  [65,70)        10        10      10        10   10  10        10          0
+  [70,100)        0         0       0         0    0   0         0          0
+          province
+age_group  Quang Ngai Soc Trang
+  [0,1)             5         5
+  [1,2)             5         5
+  [2,3)             5         5
+  [3,4)             5         5
+  [4,5)             5         5
+  [5,6)             5         5
+  [6,7)             5         5
+  [7,8)             5         5
+  [8,9)             5         5
+  [9,10)            5         5
+  [10,11)           5         5
+  [11,12)           5         5
+  [12,13)           5         5
+  [13,14)           5         5
+  [14,15)           5         5
+  [15,16)           5         5
+  [16,17)           5         5
+  [17,18)           5         5
+  [18,19)           5         5
+  [19,20)           5         5
+  [20,25)          10        10
+  [25,30)          10        10
+  [30,35)          10        10
+  [35,40)          10        10
+  [40,45)          10        10
+  [45,50)          10        10
+  [50,55)          10        10
+  [55,60)          10        10
+  [60,65)          10        10
+  [65,70)          10        10
+  [70,100)          0         0
+
+, , time_point = T3
+
+          province
+age_group  An Giang Binh Dinh Dak Lak Dong Thap HCMC Hue Khanh Hoa Kien Giang
+  [0,1)           5         5       5         5    5   5         5          0
+  [1,2)           5         5       5         5    5   5         5          0
+  [2,3)           5         4       5         5    5   5         5          0
+  [3,4)           5         6       5         5    5   5         5          0
+  [4,5)           5         5       5         5    5   5         5          0
+  [5,6)           5         5       5         5    5   5         5          0
+  [6,7)           5         5       5         5    5   5         5          0
+  [7,8)           5         5       5         5    5   5         5          0
+  [8,9)           5         5       5         5    5   5         5          0
+  [9,10)          5         5       5         5    5   5         5          0
+  [10,11)         5         5       5         5    5   5         5          0
+  [11,12)         5         5       5         5    5   5         5          0
+  [12,13)         5         5       5         5    5   5         5          0
+  [13,14)         5         5       5         5    5   5         5          0
+  [14,15)         5         5       5         5    5   5         5          0
+  [15,16)         5         5       5         5    1   5         5          0
+  [16,17)         5         5       5         5    2   5         5          0
+  [17,18)         5         5       5         5    3   5         5          0
+  [18,19)         5         5       5         5    1   5         5          0
+  [19,20)         5         5       5         5    5   5         5          0
+  [20,25)        10        10      10        10   10  10        10          0
+  [25,30)        10        10      10        10   10  10        10          0
+  [30,35)        10        10      10        10   10  10        10          0
+  [35,40)        10        10      10        10   10  10        10          0
+  [40,45)        10        10      10        10   10  10        10          0
+  [45,50)        10        10      10        10   10  10        10          0
+  [50,55)        10        10      10        10   10   9        10          0
+  [55,60)        10        10      10        10   10  11        10          0
+  [60,65)        10        10      10        10   10  10        10          0
+  [65,70)        10        10      10        10   10   9        10          0
+  [70,100)        0         0       0         0    0   1         0          0
+          province
+age_group  Quang Ngai Soc Trang
+  [0,1)             5         5
+  [1,2)             5         5
+  [2,3)             5         5
+  [3,4)             5         5
+  [4,5)             5         5
+  [5,6)             5         5
+  [6,7)             5         5
+  [7,8)             5         5
+  [8,9)             5         5
+  [9,10)            5         5
+  [10,11)           5         5
+  [11,12)           5         5
+  [12,13)           5         5
+  [13,14)           5         5
+  [14,15)           5         5
+  [15,16)           5         5
+  [16,17)           5         6
+  [17,18)           5         4
+  [18,19)           5         5
+  [19,20)           5         5
+  [20,25)          10        10
+  [25,30)          10        10
+  [30,35)          10        10
+  [35,40)          10        10
+  [40,45)          10        10
+  [45,50)          10        10
+  [50,55)          10        10
+  [55,60)          10        10
+  [60,65)          10        10
+  [65,70)          10        10
+  [70,100)          0         0</code></pre>
 </div>
 </div>
 </section>

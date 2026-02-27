@@ -287,9 +287,14 @@ gadm1 |>
 
 
 gadm1 |> 
-  filter(VARNAME_1 %in% sel) |> 
+  filter(VARNAME_1 %in% setdiff(sel, "Kien Giang")) |> 
   st_geometry() |> 
   plot(add = TRUE, col = 2)
+
+gadm1 |> 
+  filter(VARNAME_1 == "Kien Giang") |> 
+  st_geometry() |> 
+  plot(add = TRUE, col = 7)
 
 par(opar)
 ```

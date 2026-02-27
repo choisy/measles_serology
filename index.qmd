@@ -36,7 +36,7 @@ rerun_all <- function() {
 }
 ```
 
-```{r include = FALSE}
+```{r include = FALSE, purl = FALSE}
 setHook("plot.new", NULL, action = "replace")
 
 par2 <- function(...) par(..., mgp = c(1.5, .5, 0), bty = "n")
@@ -137,6 +137,17 @@ pie2 <- function(x, ...) {
 }
 ```
 
+A function that pads a data frame of coordinates:
+
+```{r}
+pad <- function(x) {
+  x <- arrange(x, 1)
+  xs <- x[[1]]
+  tibble(c(first(xs), xs, last(xs)), c(0, x[[2]], 0)) |> 
+    setNames(names(x)[1:2])
+}
+```
+
 
 ## Loading data
 
@@ -232,7 +243,8 @@ dataset <- last2collections |>
                                            ifelse(age_unit == "ng", age2 / 365, age2)),
                        age3),
          age = ifelse(age4 > 100, year - age4, age4),
-         age_group = cut(age, c(0:20, seq(25, 70, 5), 100), right = FALSE)) |> 
+         age_group = cut(age, c(0:20, seq(25, 70, 5), 100), right = FALSE),
+         across(conclusion, ~ ifelse(.x == "pós", "Pos", .x))) |> 
   select(-c(year, age_unit, age2, age3, age4, hospital)) |> 
   arrange(time_point, province, age_group, collection_date)
 ```
@@ -398,6 +410,77 @@ dataset |>
 par(opar)
 ```
 
+```{r}
+dataset |> 
+  filter(conclusion == "Neg") |> 
+  pull(titer) |> 
+  max()
 
+dataset |> 
+  filter(conclusion == "Equi") |> 
+  pull(titer) |> 
+  range()
+
+dataset |> 
+  filter(conclusion == "Pos") |> 
+  pull(titer) |> 
+  min()
+```
+
+```{r}
+ptiters <- function(df, f = log10, ...) {
+  plot(df, type = "n", xlab = "titer (IU)", ylab = "density", axes = FALSE, ...)
+  lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
+  lb2 <- 1:5
+  axis(1, log10(lb1), NA, tcl =  - .25)
+  axis(1, lb2, 10^lb2)
+  axis(2)
+  df |> 
+    group_by(cut(x, c(-Inf, f(c(150, 200)), Inf))) |> 
+    group_map(~ pad(.x)) |> 
+    walk2(c(2, 7, 3), ~ polygon(.x, col = .y, border = NA))
+}
+```
+
+```{r}
+plot_titers <- function(df, f = log10, ...) {
+  df |> 
+    pull(titer) |> 
+    f() |> 
+    density() |> 
+    extract(1:2) |> 
+    as_tibble() |> 
+    ptiters(f, ...)
+}
+```
+
+Plotting the titers:
+
+```{r fig-distribution_titers}
+plot_titers(dataset)
+```
+
+```{r}
+dataset |> 
+  group_by(conclusion) |> 
+  tally() |> 
+  mutate(prop = 100 * n / sum(n))
+```
+
+```{r fig-distribution_titers_timepoints, fig.width = .8 * eps * figw, fig.height = .8 * 3 * eps * figh}
+opar <- par(mfrow = c(3, 1), cex = 1, plt = c(.13, .97, .18, .95))
+dataset |> 
+  group_by(time_point) |> 
+  group_walk(~ plot_titers(.x, xlim = c(.5, 4.5), ylim = c(0, .8)))
+par(opar)
+```
+
+```{r}
+dataset |> 
+  group_by(time_point, conclusion) |> 
+  tally() |> 
+  mutate(prop = 100 * n / sum(n)) |> 
+  pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
+```
 
 

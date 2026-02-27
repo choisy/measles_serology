@@ -175,110 +175,120 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>A function that pads a data frame of coordinates:</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pad <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">arrange</span>(x, <span class="dv">1</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  xs <span class="ot">&lt;-</span> x[[<span class="dv">1</span>]]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="fu">c</span>(<span class="fu">first</span>(xs), xs, <span class="fu">last</span>(xs)), <span class="fu">c</span>(<span class="dv">0</span>, x[[<span class="dv">2</span>]], <span class="dv">0</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">setNames</span>(<span class="fu">names</span>(x)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 </section>
 <section id="loading-data" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="loading-data"><span class="header-section-number">4</span> Loading data</h2>
 <p>Loading all the excel files of the data folder:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>the3files <span class="ot">&lt;-</span> path2data <span class="sc">|&gt;</span> </span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list.files</span>(<span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">grep</span>(<span class="st">"gadm"</span>, <span class="at">x =</span> _, <span class="at">value =</span> <span class="cn">TRUE</span>, <span class="at">invert =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_names2</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(read_excel, <span class="st">"Marc"</span>, <span class="at">col_types =</span> <span class="st">"text"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>the3files <span class="ot">&lt;-</span> path2data <span class="sc">|&gt;</span> </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list.files</span>(<span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">grep</span>(<span class="st">"gadm"</span>, <span class="at">x =</span> _, <span class="at">value =</span> <span class="cn">TRUE</span>, <span class="at">invert =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_names2</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(read_excel, <span class="st">"Marc"</span>, <span class="at">col_types =</span> <span class="st">"text"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A function that recode sex:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>recode_sex <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  sex_val <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(x<span class="sc">$</span>sex))</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  males   <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">"^M|na"</span>, sex_val, <span class="cn">TRUE</span>, <span class="at">value =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  females <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">"^M|na"</span>, sex_val, <span class="cn">TRUE</span>, <span class="at">value =</span> <span class="cn">TRUE</span>, <span class="at">invert =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(x, <span class="fu">across</span>(sex, <span class="sc">~</span> <span class="fu">recode_values</span>(.x, males <span class="sc">~</span> <span class="st">"male"</span>, females <span class="sc">~</span> <span class="st">"female"</span>)))</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>recode_sex <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  sex_val <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(x<span class="sc">$</span>sex))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  males   <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">"^M|na"</span>, sex_val, <span class="cn">TRUE</span>, <span class="at">value =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  females <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">"^M|na"</span>, sex_val, <span class="cn">TRUE</span>, <span class="at">value =</span> <span class="cn">TRUE</span>, <span class="at">invert =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(x, <span class="fu">across</span>(sex, <span class="sc">~</span> <span class="fu">recode_values</span>(.x, males <span class="sc">~</span> <span class="st">"male"</span>, females <span class="sc">~</span> <span class="st">"female"</span>)))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A piece of code common to all the collections:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>common_data_processing <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">if_all</span>(<span class="fu">everything</span>(), is.na)) <span class="sc">|&gt;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">recode_sex</span>() <span class="sc">|&gt;</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">separate_wider_delim</span>(ID, <span class="fu">regex</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">s+"</span>), <span class="at">names =</span> <span class="fu">c</span>(<span class="st">"sID"</span>, <span class="st">"cdate"</span>, <span class="st">"plate"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(titer, as.double))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>common_data_processing <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">if_all</span>(<span class="fu">everything</span>(), is.na)) <span class="sc">|&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">recode_sex</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">separate_wider_delim</span>(ID, <span class="fu">regex</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">s+"</span>), <span class="at">names =</span> <span class="fu">c</span>(<span class="st">"sID"</span>, <span class="st">"cdate"</span>, <span class="st">"plate"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="fu">across</span>(titer, as.double))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Combining the last two collections:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>last2collections <span class="ot">&lt;-</span> the3files <span class="sc">|&gt;</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract</span>(<span class="fu">c</span>(<span class="st">"Dec2022"</span>, <span class="st">"Apr24"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(select, <span class="sc">-</span>date_collection) <span class="sc">|&gt;</span> </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">collection_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(year_collection, month_collection, day_collection,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">sep =</span> <span class="st">"-"</span>))) <span class="sc">|&gt;</span> </span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, hospital, site, collection, sample_ID, age_group, age,</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>         sex, collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>last2collections <span class="ot">&lt;-</span> the3files <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract</span>(<span class="fu">c</span>(<span class="st">"Dec2022"</span>, <span class="st">"Apr24"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(select, <span class="sc">-</span>date_collection) <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">collection_date =</span> <span class="fu">ymd</span>(<span class="fu">paste</span>(year_collection, month_collection, day_collection,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">sep =</span> <span class="st">"-"</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, hospital, site, collection, sample_ID, age_group, age,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>         sex, collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now to the first collection:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>first_collection <span class="ot">&lt;-</span> the3files<span class="sc">$</span>DEC2019 <span class="sc">|&gt;</span> </span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_chr =</span> <span class="fu">if_else</span>( <span class="fu">grepl</span>(<span class="st">"[./]"</span>, date_collection), date_collection, <span class="cn">NA</span>),</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">date_num =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"[./]"</span>, date_collection), date_collection, <span class="cn">NA</span>),</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_num, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>() <span class="sc">|&gt;</span> <span class="fu">as_date</span>(<span class="st">"1899-12-30"</span>)),</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_chr, dmy),</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">collection_date =</span> <span class="fu">coalesce</span>(date_num, date_chr)) <span class="sc">|&gt;</span> </span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, hospital, collection, sample_ID, age_group, age, sex,</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>         collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>first_collection <span class="ot">&lt;-</span> the3files<span class="sc">$</span>DEC2019 <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">common_data_processing</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date_chr =</span> <span class="fu">if_else</span>( <span class="fu">grepl</span>(<span class="st">"[./]"</span>, date_collection), date_collection, <span class="cn">NA</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">date_num =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"[./]"</span>, date_collection), date_collection, <span class="cn">NA</span>),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_num, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>() <span class="sc">|&gt;</span> <span class="fu">as_date</span>(<span class="st">"1899-12-30"</span>)),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(date_chr, dmy),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">collection_date =</span> <span class="fu">coalesce</span>(date_num, date_chr)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, hospital, collection, sample_ID, age_group, age, sex,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>         collection_date, plate, titer, conclusion)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The total collection:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> last2collections <span class="sc">|&gt;</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(first_collection) <span class="sc">|&gt;</span> </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">province =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(province), hospital, province),</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(province, <span class="sc">~</span> <span class="fu">recode_values</span>(.x, <span class="st">"AG"</span> <span class="sc">~</span> <span class="st">"An Giang"</span>,</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"BD"</span> <span class="sc">~</span> <span class="st">"Binh Dinh"</span>,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"DL"</span> <span class="sc">~</span> <span class="st">"Dak Lak"</span>,</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"DT"</span> <span class="sc">~</span> <span class="st">"Dong Thap"</span>,</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HC"</span> <span class="sc">~</span> <span class="st">"HCMC"</span>,</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HU"</span> <span class="sc">~</span> <span class="st">"Hue"</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"KG"</span> <span class="sc">~</span> <span class="st">"Kien Giang"</span>,</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"KH"</span> <span class="sc">~</span> <span class="st">"Khanh Hoa"</span>,</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"QN"</span> <span class="sc">~</span> <span class="st">"Quang Ngai"</span>,</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"ST"</span> <span class="sc">~</span> <span class="st">"Soc Trang"</span>,</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"Daklak"</span> <span class="sc">~</span> <span class="st">"Dak Lak"</span>,</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HUE"</span> <span class="sc">~</span> <span class="st">"Hue"</span>,</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HCM"</span> <span class="sc">~</span> <span class="st">"HCMC"</span>, <span class="at">default =</span> .x)),</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(collection_date),</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">time_point =</span> <span class="fu">recode_values</span>(year, <span class="dv">2019</span><span class="sc">:</span><span class="dv">2020</span> <span class="sc">~</span> <span class="st">"T1"</span>,</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>                                          <span class="dv">2022</span><span class="sc">:</span><span class="dv">2023</span> <span class="sc">~</span> <span class="st">"T2"</span>, <span class="at">default =</span> <span class="st">"T3"</span>),</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(age, <span class="sc">~</span> <span class="fu">ifelse</span>(participant <span class="sc">==</span> <span class="st">"0158"</span> <span class="sc">&amp;</span> province <span class="sc">==</span> <span class="st">"Dak Lak"</span> <span class="sc">&amp;</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>                                collection <span class="sc">==</span> <span class="st">"42"</span>, <span class="st">"48"</span>, .x)),</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_unit =</span> <span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>),</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">age2 =</span> <span class="fu">as.numeric</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>)),</span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">age3 =</span> <span class="fu">as.numeric</span>(age),</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">age4 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(age3), <span class="fu">ifelse</span>(age_unit <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"M"</span>, <span class="st">"th"</span>), age2 <span class="sc">/</span> <span class="dv">12</span>,</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>                                           <span class="fu">ifelse</span>(age_unit <span class="sc">==</span> <span class="st">"ng"</span>, age2 <span class="sc">/</span> <span class="dv">365</span>, age2)),</span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>                       age3),</span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">age =</span> <span class="fu">ifelse</span>(age4 <span class="sc">&gt;</span> <span class="dv">100</span>, year <span class="sc">-</span> age4, age4),</span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_group =</span> <span class="fu">cut</span>(age, <span class="fu">c</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>, <span class="fu">seq</span>(<span class="dv">25</span>, <span class="dv">70</span>, <span class="dv">5</span>), <span class="dv">100</span>), <span class="at">right =</span> <span class="cn">FALSE</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(year, age_unit, age2, age3, age4, hospital)) <span class="sc">|&gt;</span> </span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(time_point, province, age_group, collection_date)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> last2collections <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(first_collection) <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">province =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(province), hospital, province),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(province, <span class="sc">~</span> <span class="fu">recode_values</span>(.x, <span class="st">"AG"</span> <span class="sc">~</span> <span class="st">"An Giang"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"BD"</span> <span class="sc">~</span> <span class="st">"Binh Dinh"</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"DL"</span> <span class="sc">~</span> <span class="st">"Dak Lak"</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"DT"</span> <span class="sc">~</span> <span class="st">"Dong Thap"</span>,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HC"</span> <span class="sc">~</span> <span class="st">"HCMC"</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HU"</span> <span class="sc">~</span> <span class="st">"Hue"</span>,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"KG"</span> <span class="sc">~</span> <span class="st">"Kien Giang"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"KH"</span> <span class="sc">~</span> <span class="st">"Khanh Hoa"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"QN"</span> <span class="sc">~</span> <span class="st">"Quang Ngai"</span>,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"ST"</span> <span class="sc">~</span> <span class="st">"Soc Trang"</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"Daklak"</span> <span class="sc">~</span> <span class="st">"Dak Lak"</span>,</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HUE"</span> <span class="sc">~</span> <span class="st">"Hue"</span>,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>                                              <span class="st">"HCM"</span> <span class="sc">~</span> <span class="st">"HCMC"</span>, <span class="at">default =</span> .x)),</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(collection_date),</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">time_point =</span> <span class="fu">recode_values</span>(year, <span class="dv">2019</span><span class="sc">:</span><span class="dv">2020</span> <span class="sc">~</span> <span class="st">"T1"</span>,</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>                                          <span class="dv">2022</span><span class="sc">:</span><span class="dv">2023</span> <span class="sc">~</span> <span class="st">"T2"</span>, <span class="at">default =</span> <span class="st">"T3"</span>),</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(age, <span class="sc">~</span> <span class="fu">ifelse</span>(participant <span class="sc">==</span> <span class="st">"0158"</span> <span class="sc">&amp;</span> province <span class="sc">==</span> <span class="st">"Dak Lak"</span> <span class="sc">&amp;</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>                                collection <span class="sc">==</span> <span class="st">"42"</span>, <span class="st">"48"</span>, .x)),</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_unit =</span> <span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>),</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">age2 =</span> <span class="fu">as.numeric</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>)),</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">age3 =</span> <span class="fu">as.numeric</span>(age),</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">age4 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(age3), <span class="fu">ifelse</span>(age_unit <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"M"</span>, <span class="st">"th"</span>), age2 <span class="sc">/</span> <span class="dv">12</span>,</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>                                           <span class="fu">ifelse</span>(age_unit <span class="sc">==</span> <span class="st">"ng"</span>, age2 <span class="sc">/</span> <span class="dv">365</span>, age2)),</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>                       age3),</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">age =</span> <span class="fu">ifelse</span>(age4 <span class="sc">&gt;</span> <span class="dv">100</span>, year <span class="sc">-</span> age4, age4),</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_group =</span> <span class="fu">cut</span>(age, <span class="fu">c</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>, <span class="fu">seq</span>(<span class="dv">25</span>, <span class="dv">70</span>, <span class="dv">5</span>), <span class="dv">100</span>), <span class="at">right =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(conclusion, <span class="sc">~</span> <span class="fu">ifelse</span>(.x <span class="sc">==</span> <span class="st">"pós"</span>, <span class="st">"Pos"</span>, .x))) <span class="sc">|&gt;</span> </span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(year, age_unit, age2, age3, age4, hospital)) <span class="sc">|&gt;</span> </span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(time_point, province, age_group, collection_date)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A hash table to generate site ID from province names:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>hash <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span> </span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(time_point <span class="sc">==</span> <span class="st">"T1"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(age <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(province, site) <span class="sc">|&gt;</span> </span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">setNames</span>(site, province))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>hash <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(time_point <span class="sc">==</span> <span class="st">"T1"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(age <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(province, site) <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">setNames</span>(site, province))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Completing the site ID:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> <span class="fu">mutate</span>(dataset, <span class="fu">across</span>(site, <span class="sc">~</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(.x), hash[province], .x)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> <span class="fu">mutate</span>(dataset, <span class="fu">across</span>(site, <span class="sc">~</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(.x), hash[province], .x)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Which gives:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dataset</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dataset</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5,573 × 13
    participant province site  collection sample_ID age_group   age sex   
@@ -303,8 +313,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="5" class="anchored" data-anchor-id="sampling-locations"><span class="header-section-number">5</span> Sampling locations</h2>
 <p>Loading the <code>sf</code> object of the provinces of Vietnam:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(path2data, <span class="st">"gadm36_VNM_1_sf.rds"</span>))</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(gadm1) <span class="ot">&lt;-</span> <span class="fu">st_crs</span>(gadm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(path2data, <span class="st">"gadm36_VNM_1_sf.rds"</span>))</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(gadm1) <span class="ot">&lt;-</span> <span class="fu">st_crs</span>(gadm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>old-style crs object detected; please recreate object with a recent sf::st_crs()
 old-style crs object detected; please recreate object with a recent sf::st_crs()</code></pre>
@@ -312,30 +322,30 @@ old-style crs object detected; please recreate object with a recent sf::st_crs()
 </div>
 <p>Plotting the provinces from which samples where collected:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sel <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(province) <span class="sc">|&gt;</span> </span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_replace</span>(<span class="st">"Hue"</span>, <span class="st">"Thua Thien Hue"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_replace</span>(<span class="st">"HCMC"</span>, <span class="st">"Ho Chi Minh"</span>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">plt =</span> <span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">col =</span> <span class="st">"lightyellow"</span>)</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(VARNAME_1 <span class="sc">%in%</span> <span class="fu">setdiff</span>(sel, <span class="st">"Kien Giang"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="dv">2</span>)</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(VARNAME_1 <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="dv">7</span>)</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>sel <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(province) <span class="sc">|&gt;</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_replace</span>(<span class="st">"Hue"</span>, <span class="st">"Thua Thien Hue"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_replace</span>(<span class="st">"HCMC"</span>, <span class="st">"Ho Chi Minh"</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">plt =</span> <span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">col =</span> <span class="st">"lightyellow"</span>)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(VARNAME_1 <span class="sc">%in%</span> <span class="fu">setdiff</span>(sel, <span class="st">"Kien Giang"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="dv">2</span>)</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>gadm1 <span class="sc">|&gt;</span> </span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(VARNAME_1 <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="dv">7</span>)</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-map" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="470.4">
 <figure class="quarto-float quarto-float-fig figure">
@@ -354,7 +364,7 @@ Figure&nbsp;1
 <h2 data-number="6" class="anchored" data-anchor-id="overview-of-the-data"><span class="header-section-number">6</span> Overview of the data</h2>
 <p>Number of sample per site per time point:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">with</span>(dataset, <span class="fu">table</span>(province, time_point))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">with</span>(dataset, <span class="fu">table</span>(province, time_point))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            time_point
 province      T1  T2  T3
@@ -372,30 +382,30 @@ province      T1  T2  T3
 </div>
 <p>A tuning of the <code>barplot()</code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>barplot2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, ...) {</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  n1 <span class="ot">&lt;-</span> <span class="dv">5</span>; n2 <span class="ot">&lt;-</span> <span class="dv">10</span>; ad <span class="ot">&lt;-</span> <span class="dv">20</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(x, {</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">barplot</span>(Freq, <span class="at">space =</span> <span class="dv">0</span>, <span class="at">col =</span> <span class="dv">4</span>, ...)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtext</span>(province[<span class="dv">1</span>], <span class="at">line =</span> <span class="sc">-</span>.<span class="dv">5</span>)</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">segments</span>( <span class="dv">0</span>, n1, ad, n1, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">4</span>)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">segments</span>(ad, n2, <span class="dv">31</span>, n2, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">4</span>)</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>barplot2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, ...) {</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  n1 <span class="ot">&lt;-</span> <span class="dv">5</span>; n2 <span class="ot">&lt;-</span> <span class="dv">10</span>; ad <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(x, {</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">barplot</span>(Freq, <span class="at">space =</span> <span class="dv">0</span>, <span class="at">col =</span> <span class="dv">4</span>, ...)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtext</span>(province[<span class="dv">1</span>], <span class="at">line =</span> <span class="sc">-</span>.<span class="dv">5</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">segments</span>( <span class="dv">0</span>, n1, ad, n1, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">4</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">segments</span>(ad, n2, <span class="dv">31</span>, n2, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">4</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Number of sample per age class, per province, per time point:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span> </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">table</span>(age_group, province, time_point)) <span class="sc">|&gt;</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>ylim <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(tmp<span class="sc">$</span>Freq))</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">105</span>, .<span class="dv">97</span>, .<span class="dv">1</span>, .<span class="dv">9</span>))</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>tmp <span class="sc">|&gt;</span> </span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, province) <span class="sc">|&gt;</span> </span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(<span class="sc">~</span> <span class="fu">barplot2</span>(.x, <span class="at">ylim =</span> ylim))</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> dataset <span class="sc">|&gt;</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">table</span>(age_group, province, time_point)) <span class="sc">|&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>ylim <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(tmp<span class="sc">$</span>Freq))</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">105</span>, .<span class="dv">97</span>, .<span class="dv">1</span>, .<span class="dv">9</span>))</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>tmp <span class="sc">|&gt;</span> </span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, province) <span class="sc">|&gt;</span> </span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(<span class="sc">~</span> <span class="fu">barplot2</span>(.x, <span class="at">ylim =</span> ylim))</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-nb_samples_site_timepoint_ageclass" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="672">
 <figure class="quarto-float quarto-float-fig figure">
@@ -411,20 +421,20 @@ Figure&nbsp;2
 </div>
 <p>Number of sample per day and site:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>hz_lines <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province, collection_date) <span class="sc">|&gt;</span> </span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y =</span> <span class="fu">max</span>(hz_lines) <span class="sc">+</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(province))) <span class="sc">|&gt;</span> </span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">plot</span>(collection_date, y, <span class="at">cex =</span> <span class="fu">sqrt</span>(n), <span class="at">ann =</span> <span class="cn">FALSE</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">col =</span> <span class="dv">4</span>,</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">xpd =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>lb <span class="ot">&lt;-</span> <span class="dv">2020</span><span class="sc">:</span><span class="dv">2024</span></span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, <span class="fu">ymd</span>(<span class="fu">paste</span>(lb, <span class="st">"0101"</span>)), lb)</span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> hz_lines, <span class="at">col =</span> <span class="st">"grey"</span>)</span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="fu">text2</span>(<span class="fu">rep</span>(<span class="fu">ymd</span>(<span class="dv">20210701</span>), <span class="fu">length</span>(hz_lines)), <span class="fu">rev</span>(hz_lines), <span class="fu">unique</span>(dataset<span class="sc">$</span>province))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>hz_lines <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province, collection_date) <span class="sc">|&gt;</span> </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y =</span> <span class="fu">max</span>(hz_lines) <span class="sc">+</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(province))) <span class="sc">|&gt;</span> </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">plot</span>(collection_date, y, <span class="at">cex =</span> <span class="fu">sqrt</span>(n), <span class="at">ann =</span> <span class="cn">FALSE</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">col =</span> <span class="dv">4</span>,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">xpd =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>lb <span class="ot">&lt;-</span> <span class="dv">2020</span><span class="sc">:</span><span class="dv">2024</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, <span class="fu">ymd</span>(<span class="fu">paste</span>(lb, <span class="st">"0101"</span>)), lb)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> hz_lines, <span class="at">col =</span> <span class="st">"grey"</span>)</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="fu">text2</span>(<span class="fu">rep</span>(<span class="fu">ymd</span>(<span class="dv">20210701</span>), <span class="fu">length</span>(hz_lines)), <span class="fu">rev</span>(hz_lines), <span class="fu">unique</span>(dataset<span class="sc">$</span>province))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-nb_sample_day_site" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="672">
 <figure class="quarto-float quarto-float-fig figure">
@@ -440,15 +450,15 @@ Figure&nbsp;3
 </div>
 <p>An alternative representation:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="cn">NA</span>, <span class="at">xlim =</span> <span class="fu">range</span>(dataset<span class="sc">$</span>collection_date), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">600</span>), <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="cn">NA</span>, <span class="at">ylab =</span> <span class="st">"cumulative number of samples"</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, <span class="fu">ymd</span>(<span class="fu">paste</span>(lb, <span class="st">"0101"</span>)), lb); <span class="fu">axis</span>(<span class="dv">2</span>)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province, collection_date) <span class="sc">|&gt;</span> </span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_modify</span>(<span class="sc">~</span> <span class="fu">mutate</span>(.x, <span class="at">cumn =</span> <span class="fu">cumsum</span>(n))) <span class="sc">|&gt;</span> </span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_walk</span>(<span class="sc">~</span> <span class="fu">with</span>(.x, <span class="fu">lines</span>(collection_date, cumn, <span class="at">type =</span> <span class="st">"s"</span>, <span class="at">col =</span> <span class="dv">4</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="cn">NA</span>, <span class="at">xlim =</span> <span class="fu">range</span>(dataset<span class="sc">$</span>collection_date), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">600</span>), <span class="at">axes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="cn">NA</span>, <span class="at">ylab =</span> <span class="st">"cumulative number of samples"</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">axis</span>(<span class="dv">1</span>, <span class="fu">ymd</span>(<span class="fu">paste</span>(lb, <span class="st">"0101"</span>)), lb); <span class="fu">axis</span>(<span class="dv">2</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province, collection_date) <span class="sc">|&gt;</span> </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_modify</span>(<span class="sc">~</span> <span class="fu">mutate</span>(.x, <span class="at">cumn =</span> <span class="fu">cumsum</span>(n))) <span class="sc">|&gt;</span> </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_walk</span>(<span class="sc">~</span> <span class="fu">with</span>(.x, <span class="fu">lines</span>(collection_date, cumn, <span class="at">type =</span> <span class="st">"s"</span>, <span class="at">col =</span> <span class="dv">4</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-cum_nb_sample" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="672">
 <figure class="quarto-float quarto-float-fig figure">
@@ -464,11 +474,11 @@ Figure&nbsp;4
 </div>
 <p>Yet another representation:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(collection_date) <span class="sc">|&gt;</span> </span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">plot</span>(collection_date, n, <span class="at">type =</span> <span class="st">"h"</span>, <span class="at">col =</span> <span class="st">"4"</span>, <span class="at">xlab =</span> <span class="cn">NA</span>,</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">ylab =</span> <span class="st">"sampling intensity (/day)"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(collection_date) <span class="sc">|&gt;</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">plot</span>(collection_date, n, <span class="at">type =</span> <span class="st">"h"</span>, <span class="at">col =</span> <span class="st">"4"</span>, <span class="at">xlab =</span> <span class="cn">NA</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">ylab =</span> <span class="st">"sampling intensity (/day)"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-sampling_intensity" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="672">
 <figure class="quarto-float quarto-float-fig figure">
@@ -484,17 +494,17 @@ Figure&nbsp;5
 </div>
 <p>Gender distribution:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">05</span>, .<span class="dv">95</span>, .<span class="dv">01</span>, .<span class="dv">91</span>))</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">table</span>(sex, province, time_point)) <span class="sc">|&gt;</span> </span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, province) <span class="sc">|&gt;</span> </span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(<span class="sc">~</span> <span class="fu">with</span>(.x, {</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pie2</span>(Freq, <span class="cn">NA</span>, <span class="at">col =</span> <span class="fu">c</span>(<span class="fu">rgb2</span>(<span class="dv">247</span>, <span class="dv">114</span>, <span class="dv">184</span>), <span class="fu">rgb2</span>(<span class="dv">62</span>, <span class="dv">146</span>, <span class="dv">247</span>)))</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtext</span>(province[<span class="dv">1</span>], <span class="at">line =</span> <span class="sc">-</span>.<span class="dv">5</span>)</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  }))</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfcol =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">05</span>, .<span class="dv">95</span>, .<span class="dv">01</span>, .<span class="dv">91</span>))</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(<span class="fu">table</span>(sex, province, time_point)) <span class="sc">|&gt;</span> </span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, province) <span class="sc">|&gt;</span> </span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(<span class="sc">~</span> <span class="fu">with</span>(.x, {</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pie2</span>(Freq, <span class="cn">NA</span>, <span class="at">col =</span> <span class="fu">c</span>(<span class="fu">rgb2</span>(<span class="dv">247</span>, <span class="dv">114</span>, <span class="dv">184</span>), <span class="fu">rgb2</span>(<span class="dv">62</span>, <span class="dv">146</span>, <span class="dv">247</span>)))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mtext</span>(province[<span class="dv">1</span>], <span class="at">line =</span> <span class="sc">-</span>.<span class="dv">5</span>)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  }))</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-sex_distribution" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="470.4">
 <figure class="quarto-float quarto-float-fig figure">
@@ -506,6 +516,118 @@ Figure&nbsp;6
 </figcaption>
 </figure>
 </div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(conclusion <span class="sc">==</span> <span class="st">"Neg"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(titer) <span class="sc">|&gt;</span> </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 149.654</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(conclusion <span class="sc">==</span> <span class="st">"Equi"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(titer) <span class="sc">|&gt;</span> </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">range</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 150.3105 199.9807</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(conclusion <span class="sc">==</span> <span class="st">"Pos"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(titer) <span class="sc">|&gt;</span> </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">min</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 200.1092</code></pre>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>ptiters <span class="ot">&lt;-</span> <span class="cf">function</span>(df, <span class="at">f =</span> log10, ...) {</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(df, <span class="at">type =</span> <span class="st">"n"</span>, <span class="at">xlab =</span> <span class="st">"titer (IU)"</span>, <span class="at">ylab =</span> <span class="st">"density"</span>, <span class="at">axes =</span> <span class="cn">FALSE</span>, ...)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  lb1 <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">map</span>(<span class="dv">10</span><span class="sc">^</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>), <span class="sc">~</span> .x <span class="sc">*</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  lb2 <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">axis</span>(<span class="dv">1</span>, <span class="fu">log10</span>(lb1), <span class="cn">NA</span>, <span class="at">tcl =</span>  <span class="sc">-</span> .<span class="dv">25</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">axis</span>(<span class="dv">1</span>, lb2, <span class="dv">10</span><span class="sc">^</span>lb2)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">axis</span>(<span class="dv">2</span>)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span> </span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(<span class="fu">cut</span>(x, <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fu">f</span>(<span class="fu">c</span>(<span class="dv">150</span>, <span class="dv">200</span>)), <span class="cn">Inf</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_map</span>(<span class="sc">~</span> <span class="fu">pad</span>(.x)) <span class="sc">|&gt;</span> </span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">walk2</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">7</span>, <span class="dv">3</span>), <span class="sc">~</span> <span class="fu">polygon</span>(.x, <span class="at">col =</span> .y, <span class="at">border =</span> <span class="cn">NA</span>))</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>plot_titers <span class="ot">&lt;-</span> <span class="cf">function</span>(df, <span class="at">f =</span> log10, ...) {</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span> </span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(titer) <span class="sc">|&gt;</span> </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">f</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">density</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">extract</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ptiters</span>(f, ...)</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Plotting the titers:</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_titers</span>(dataset)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-distribution_titers" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="470.4">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-distribution_titers-1.png" id="fig-distribution_titers" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="470">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(conclusion) <span class="sc">|&gt;</span> </span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prop =</span> <span class="dv">100</span> <span class="sc">*</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  conclusion     n  prop
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt;
+1 Equi         297  5.33
+2 Neg          879 15.8 
+3 Pos         4397 78.9 </code></pre>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>), <span class="at">cex =</span> <span class="dv">1</span>, <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">13</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point) <span class="sc">|&gt;</span> </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_walk</span>(<span class="sc">~</span> <span class="fu">plot_titers</span>(.x, <span class="at">xlim =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="fl">4.5</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">8</span>)))</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-distribution_titers_timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="376.32">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-distribution_titers_timepoints-1.png" id="fig-distribution_titers_timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="376">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, conclusion) <span class="sc">|&gt;</span> </span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prop =</span> <span class="dv">100</span> <span class="sc">*</span> n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">|&gt;</span> </span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> <span class="sc">-</span>n, <span class="at">names_from =</span> time_point, <span class="at">values_from =</span> prop)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  conclusion    T1    T2    T3
+  &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Equi         4.8  5.32  5.93
+2 Neg         12.0 19.6  16.2 
+3 Pos         83.2 75.1  77.8 </code></pre>
 </div>
 </div>
 </section>

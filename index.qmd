@@ -603,4 +603,56 @@ dataset |>
 par(opar)
 ```
 
+```{r}
+dataset |> 
+  with(plot(age, log10(titer)))
+```
+
+```{r}
+library(mgcv)
+```
+
+```{r}
+get_reml <- function(x) {
+  as.numeric(x$gcv.ubre)
+}
+```
+
+```{r}
+dev_explained <- function(x) {
+  summary(x)$dev.expl
+}
+```
+
+```{r}
+AIC(out[[1]])
+```
+
+
+```{r}
+model <- dataset |> 
+  mutate(log_titer = log10(titer)) |> 
+  gam(log_titer ~ s(age, k = 50), data = _, method = "REML")
+
+data2 <- mutate(dataset, log_titer = log10(titer))
+
+out <- c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "re", "gp") |>
+  purrr::set_names() |> 
+  map(~ gam(log_titer ~ s(age, bs = .x, k = 50), data = data2, method = "REML"))
+
+gam(log_titer ~ s(age, k = 50), data = data2, method = "REML")
+
+
+k.check(model)
+
+x <- seq(0, 70, le = 512)
+y <- model |>
+  predict(list(age = x), se.fit = .95) |> 
+  as_tibble()
+plot(x, y$fit, type = "l", ylim = range(y))
+lines(x, y$ll)
+lines(x, y$ul)
+abline(h = log10(c(150, 200)))
+```
+
 

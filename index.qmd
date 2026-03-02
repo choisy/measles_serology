@@ -73,6 +73,8 @@ if (grepl("arc|hoisy", Sys.getenv("USER"))) {
 path2cache <- paste0(path2data, "cache/")
 if (! dir.exists(path2cache)) dir.create(path2cache)
 make_path <- function(x) paste0(path2cache, x)
+file_exists <- function(x) file.exists(make_path(x))
+readRDScache <- function(x) readRDS(make_path(x))
 saveRDScache <- function(object, file) saveRDS(object, make_path(file))
 ```
 
@@ -83,7 +85,7 @@ Required packages:
 
 ```{r}
 required <- c("sf", "readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr",
-              "lubridate")
+              "lubridate", "mgcv")
 ```
 
 Installing those that are not installed yet:
@@ -161,6 +163,24 @@ Tuning of the `abline()` function:
 abline2 <- function(...) abline(..., col = "lightgrey")
 ```
 
+Tuning of the `grep()` function:
+
+```{r}
+grep2 <- function(pattern, x, ...) grep(x, pattern, value = TRUE, invert = TRUE, ...)
+```
+
+A function that retrieves the REML from a GAM model:
+
+```{r}
+get_reml <- function(x) as.numeric(x$gcv.ubre)
+```
+
+A function that retrieve the percentage of deviance explained from a GAM model:
+
+```{r}
+dev_explained <- function(x) summary(x)$dev.expl
+```
+
 
 ## Loading data
 
@@ -169,7 +189,8 @@ Loading all the excel files of the data folder:
 ```{r}
 the3files <- path2data |> 
   list.files(full.names = TRUE) |> 
-  grep("gadm", x = _, value = TRUE, invert = TRUE) |> 
+  grep2("gadm") |> 
+  grep2("cache") |> 
   set_names2() |> 
   map(read_excel, "Marc", col_types = "text")
 ```
@@ -614,56 +635,179 @@ dataset |>
 par(opar)
 ```
 
-```{r}
+## GAM models
+
+```{r fig-titers_raw_data, fig.width = 7, fig.height = 5}
 dataset |> 
-  with(plot(age, log10(titer)))
+  with(plot(age, log10(titer), col = adjustcolor("black", .2)))
 ```
 
 ```{r}
-library(mgcv)
+data2 <- mutate(dataset, log_titer = log10(titer),
+                positive1 = titer > 200,
+                positive2 = titer > 150)
+```
+
+All the 10 smoothing bases more or less perform equally well:
+
+```{r eval = FALSE}
+models <- tibble(
+  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                      "cyclic P-spline", "Gaussian process"),
+  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+  mutate(model   = map(code, ~ gam(log_titer ~ s(age, bs = .x, k = 50),
+                                   data = data2, method = "REML")),
+         REML    = map_dbl(model, get_reml),
+         per_dev = map_dbl(model, dev_explained),
+         AIC     = map_dbl(model, AIC),
+         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+  unnest_wider(k_check)
+```
+
+```{r include = FALSE}
+if (file_exists("models.rds")) {
+  models <- readRDScache("models.rds")
+} else {
+  models <- tibble(
+    smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                        "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                        "cyclic P-spline", "Gaussian process"),
+    code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+    mutate(model   = map(code, ~ gam(log_titer ~ s(age, bs = .x, k = 50),
+                                     data = data2, method = "REML")),
+           REML    = map_dbl(model, get_reml),
+           per_dev = map_dbl(model, dev_explained),
+           AIC     = map_dbl(model, AIC),
+           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+    unnest_wider(k_check)
+  saveRDScache(models, "models.rds")
+}
+```
+
+Which gives:
+
+```{r}
+models
 ```
 
 ```{r}
-get_reml <- function(x) {
-  as.numeric(x$gcv.ubre)
+predict2_0 <- function(model, x = seq(0, 70, le = 512)) {
+  bind_cols(tibble(x  = x),
+            as_tibble(predict(model, list(age = x), se.fit = .95)))
 }
 ```
 
 ```{r}
-dev_explained <- function(x) {
-  summary(x)$dev.expl
+predict2 <- function(model, x = seq(0, 70, le = 512)) {
+  bind_cols(tibble(x  = x),
+            model |> 
+              predict(list(age = x), se.fit = .95) |> 
+              map(model$family$linkinv) |> 
+              as_tibble())
 }
 ```
 
 ```{r}
-AIC(out[[1]])
+plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU)", ylim = NULL, ...) {
+  with(pred, {
+    if (is.null(ylim)) ylim <- pred |> 
+        select(-x) |> 
+        range()
+    plot(x, fit, type = "n", ylim = ylim, xaxs = "i", axes = FALSE, ylab = ylab,
+         xlab = "age (year)", ...)
+    if (ylog) {
+      lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
+      lb2 <- c(150, 200, 300, 500, 700, 1000)
+      axis(2, log10(lb1), NA)
+      axis(2, log10(lb2), lb2)
+    } else {
+      axis(2)
+    }
+    axis(1)
+    abline(v = c(.75, 1.5, seq(5, 65, 10)), col = "lightgrey")
+    abline(v = seq(10, 60, 10), col = "grey")
+    polygon(c(x, rev(x)), c(ll, rev(ul)), border = NA, col = adjustcolor(4, .2))
+    lines(x, fit, col = 4, lwd = 2)
+  })
+  box(bty = "o")
+}
 ```
 
+Let's then stick to the thin plate smoothing. Plotting smoothed trends:
+
+```{r fig-gam_titer, fig.width = 7, fig.height = 5}
+models |> 
+  filter(code == "tp") |> 
+  pull(model) |> 
+  first() |>
+  predict2() |> 
+  plot_pred()
+abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
+```
+
+```{r eval = FALSE}
+models_prev <- tibble(
+  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                      "cyclic P-spline", "Gaussian process"),
+  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+  mutate(model   = map(code, ~ gam(positive1 ~ s(age, bs = .x, k = 50), binomial,
+                                   data2, method = "REML")),
+         REML    = map_dbl(model, get_reml),
+         per_dev = map_dbl(model, dev_explained),
+         AIC     = map_dbl(model, AIC),
+         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+  unnest_wider(k_check)
+```
+
+```{r include = FALSE}
+if (file_exists("models_prev.rds")) {
+  models_prev <- readRDScache("models_prev.rds")
+} else {
+  models_prev <- tibble(
+    smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                        "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                        "cyclic P-spline", "Gaussian process"),
+    code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+    mutate(model   = map(code, ~ gam(positive1 ~ s(age, bs = .x, k = 50), binomial,
+                                     data2, method = "REML")),
+           REML    = map_dbl(model, get_reml),
+           per_dev = map_dbl(model, dev_explained),
+           AIC     = map_dbl(model, AIC),
+           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+    unnest_wider(k_check)
+  saveRDScache(models_prev, "models_prev.rds")
+}
+```
+
+which gives:
 
 ```{r}
-model <- dataset |> 
-  mutate(log_titer = log10(titer)) |> 
-  gam(log_titer ~ s(age, k = 50), data = _, method = "REML")
-
-data2 <- mutate(dataset, log_titer = log10(titer))
-
-out <- c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "re", "gp") |>
-  purrr::set_names() |> 
-  map(~ gam(log_titer ~ s(age, bs = .x, k = 50), data = data2, method = "REML"))
-
-gam(log_titer ~ s(age, k = 50), data = data2, method = "REML")
-
-
-k.check(model)
-
-x <- seq(0, 70, le = 512)
-y <- model |>
-  predict(list(age = x), se.fit = .95) |> 
-  as_tibble()
-plot(x, y$fit, type = "l", ylim = range(y))
-lines(x, y$ll)
-lines(x, y$ul)
-abline(h = log10(c(150, 200)))
+models_prev
 ```
+
+```{r fig-gam_seroprev, fig.width = 7, fig.height = 5}
+models_prev |> 
+  filter(code == "tp") |> 
+  pull(model) |> 
+  first() |>
+  predict2() |>
+  plot_pred(ylog = FALSE, ylab = "prevalence", ylim = 0:1, yaxs = "i")
+abline(h = 1:9 / 10, col = "grey")
+```
+
+## TO DO
+
+* model density() in 2D in order to see density of data points not only as a function 
+of age but also as a function of titers
+
+* doing clustering on the ANCOVA
+
+* understanding the age profile of titers and seroprevalence. Maybe as an effect of
+vaccination and waning immunity for vaccination
+
+* Looking at 0-1 and 0-5 in order to see whether we see more detail signal as a
+function of age
 
 

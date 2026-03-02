@@ -19,11 +19,13 @@ make_path <- function(x) paste0(path2cache, x)
 readRDScache <- function(x) readRDS(make_path(x))
 ```
 
+::: {.callout-note}
 Full analysis (with R code): [https://choisy.github.io/measles_serology](https://choisy.github.io/measles_serology)
 
 GitHub repository: [https://github.com/choisy/measles_serology](https://github.com/choisy/measles_serology)
 
 Leave comments or make suggestions by posting an issue [here](https://github.com/choisy/measles_serology/issues) (click on the green button in the top right corner).
+:::
 
 The locations of provinces on the map:
 

@@ -69,6 +69,13 @@ if (grepl("arc|hoisy", Sys.getenv("USER"))) {
 }
 ```
 
+```{r include = FALSE}
+path2cache <- paste0(path2data, "cache/")
+if (! dir.exists(path2cache)) dir.create(path2cache)
+make_path <- function(x) paste0(path2cache, x)
+saveRDScache <- function(object, file) saveRDS(object, make_path(file))
+```
+
 
 ## Packages
 
@@ -324,6 +331,10 @@ Number of sample per site per time point:
 
 ```{r}
 with(dataset, table(province, time_point))
+```
+
+```{r}
+saveRDScache(with(dataset, table(province, time_point)), "nb_samples_prov_timepoint.rds")
 ```
 
 A tuning of the `barplot()` function:

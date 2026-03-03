@@ -48,7 +48,7 @@ knitr::knit_hooks$set(
 
 figw <- 7  # default is 7 and maximum possible is 8.3
 figh <- 5  # default is 5
-eps <- .7
+eps <- .8
 
 knitr::opts_chunk$set(margin     = TRUE,
                       fig.retina = 2,
@@ -318,7 +318,7 @@ st_crs(gadm1) <- st_crs(gadm1)
 
 Plotting the provinces from which samples where collected:
 
-```{r fig-map, fig.height = 6}
+```{r fig-map, fig.width = .7 * 7, fig.height = 6}
 sel <- dataset |>
   pull(province) |> 
   unique() |> 
@@ -410,7 +410,7 @@ text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$provin
 
 An alternative representation:
 
-```{r fig-cum_nb_sample, fig.width = 7, fig.height = 5}
+```{r fig-cum_nb_sample}
 plot(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), axes = FALSE,
      xlab = NA, ylab = "cumulative number of samples")
 axis(1, ymd(paste(lb, "0101")), lb); axis(2)
@@ -424,7 +424,7 @@ dataset |>
 
 Yet another representation:
 
-```{r fig-sampling_intensity, fig.width = 7, fig.height = 5}
+```{r fig-sampling_intensity}
 dataset |> 
   group_by(collection_date) |> 
   tally() |> 
@@ -505,7 +505,7 @@ dataset |>
   mutate(prop = 100 * n / sum(n))
 ```
 
-```{r fig-distribution_titers_timepoints, fig.width = .8 * eps * figw, fig.height = .8 * 3 * eps * figh}
+```{r fig-distribution_titers_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
 opar <- par(mfrow = c(3, 1), cex = 1, plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
@@ -581,11 +581,11 @@ plot_age_profile <- function(x) {
 }
 ```
 
-```{r fig-age_profile, fig.width = 7, fig.height = 5}
+```{r fig-age_profile}
 plot_age_profile(dataset)
 ```
 
-```{r fig-age_profile_timepoints, fig.width = .8 * eps * figw, fig.height = .8 * 3 * eps * figh}
+```{r fig-age_profile_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
 opar <- par(mfrow = c(3, 1), cex = 1, plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
@@ -637,7 +637,7 @@ par(opar)
 
 ## GAM models
 
-```{r fig-titers_raw_data, fig.width = 7, fig.height = 5}
+```{r fig-titers_raw_data}
 dataset |> 
   with(plot(age, log10(titer), col = adjustcolor("black", .2)))
 ```
@@ -736,7 +736,7 @@ plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU)", ylim = NULL, 
 
 Let's then stick to the thin plate smoothing. Plotting smoothed trends:
 
-```{r fig-gam_titer, fig.width = 7, fig.height = 5}
+```{r fig-gam_titer}
 models |> 
   filter(code == "tp") |> 
   pull(model) |> 
@@ -787,7 +787,7 @@ which gives:
 models_prev
 ```
 
-```{r fig-gam_seroprev, fig.width = 7, fig.height = 5}
+```{r fig-gam_seroprev}
 models_prev |> 
   filter(code == "tp") |> 
   pull(model) |> 
@@ -802,55 +802,33 @@ abline(h = 1:9 / 10, col = "grey")
 * model density() in 2D in order to see density of data points not only as a function 
 of age but also as a function of titers
 
-```{r eval = FALSE}
-MASS::kde2d()
-ks::kde()
-```
 
-```{r}
-?MASS::kde2d()
-```
-
-```{r}
-library(MASS)
-attach(geyser)
-plot(duration, waiting, xlim = c(0.5,6), ylim = c(40,100))
-f1 <- kde2d(duration, waiting, n = 50, lims = c(0.5, 6, 40, 100))
-image(f1, zlim = c(0, 0.05))
-f2 <- kde2d(duration, waiting, n = 50, lims = c(0.5, 6, 40, 100),
-            h = c(width.SJ(duration), width.SJ(waiting)) )
-image(f2, zlim = c(0, 0.05))
-persp(f2, phi = 30, theta = 20, d = 5)
-```
-
-```{r}
-f1 <- with(data2, kde2d(age, log_titer, n = 500))
-image(f1)
-f2 <- with(data2, kde2d(age, log_titer, n = 500), h = c(width.SJ(age), width.SJ(log_titer)))
-image(f2)
-```
-
-```{r}
-data2 |> 
-  filter(age < 20) |> 
-  with(kde2d(age, log_titer, n = 500, h = c(width.SJ(age), width.SJ(log_titer)))) |> 
-  image()
-```
-
-```{r}
+```{r fig-titer_density_age}
 min_titer <- min(data2$log_titer)
 max_titer <- max(data2$log_titer)
-a <- data2 |> 
+
+data2 |> 
+  filter(age < 70) |> 
   group_by(age_group) |> 
-  group_map(~ density(.x$log_titer, from = min_titer, to = max_titer)) |> 
-  map(~ with(.x, tibble(x, y))) |> 
-  map(pad)
-```
+  group_map(~ density(.x$log_titer, from = min_titer, to = max_titer)$y) |> 
+  rep(c(rep(1, 20), rep(5, 10))) |> 
+  as.data.frame() |> 
+  as.matrix() |> 
+  t() |>
+  image(1:70 - .5, seq(min_titer, max_titer, le = 512), z = _, axes = FALSE,
+        xlab = "age (years)", ylab = "titer (IU/L)",
+        col = hcl.colors(256, "YlOrRd", rev = TRUE))
 
-```{r}
-a
-```
+axis(1)
+lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
+lb2 <- 1:5
+axis(2, log10(lb1), NA, tcl =  - .25)
+axis(2, lb2, 10^lb2)
 
+abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
+
+box(bty = "o")
+```
 
 * doing clustering on the ANCOVA
 

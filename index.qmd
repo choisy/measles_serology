@@ -381,7 +381,7 @@ tmp <- dataset |>
 
 ylim <- c(0, max(tmp$Freq))
 
-opar <- par(mfcol = c(10, 3), plt = c(.105, .97, .1, .9))
+opar <- par(mfcol = c(10, 3), plt = c(.12, .985, .1, .9), cex = 1)
 tmp |> 
   group_by(time_point, province) |> 
   group_split() |> 
@@ -391,8 +391,10 @@ par(opar)
 
 Number of sample per day and site:
 
-```{r fig-nb_sample_day_site, fig.width = 7, fig.height = 5}
+```{r fig-nb_sample_day_site}
 hz_lines <- 1:10
+
+opar <- par(plt = c(.105, .97, .1, .9))
 
 dataset |> 
   group_by(province, collection_date) |> 
@@ -406,6 +408,8 @@ lb <- 2020:2024
 axis(1, ymd(paste(lb, "0101")), lb)
 abline(h = hz_lines, col = "grey")
 text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$province))
+
+par(opar)
 ```
 
 An alternative representation:
@@ -467,7 +471,7 @@ dataset |>
 
 ```{r}
 ptiters <- function(df, f = log10, ...) {
-  plot(df, type = "n", xlab = "titer (IU)", ylab = "density", axes = FALSE, ...)
+  plot(df, type = "n", xlab = "titer (IU/L)", ylab = "density", axes = FALSE, ...)
   lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
   lb2 <- 1:5
   axis(1, log10(lb1), NA, tcl =  - .25)
@@ -709,7 +713,7 @@ predict2 <- function(model, x = seq(0, 70, le = 512)) {
 ```
 
 ```{r}
-plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU)", ylim = NULL, ...) {
+plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL, ...) {
   with(pred, {
     if (is.null(ylim)) ylim <- pred |> 
         select(-x) |> 

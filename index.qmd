@@ -39,11 +39,11 @@ rerun_all <- function() {
 ```{r include = FALSE, purl = FALSE}
 setHook("plot.new", NULL, action = "replace")
 
-par2 <- function(...) par(..., mgp = c(1.5, .5, 0), bty = "n")
+par3 <- function(...) par(..., mgp = c(1.5, .5, 0), bty = "n")
 
 knitr::knit_hooks$set(
   margin = function(before, options, envir) {
-    if (before) par2(plt = c(.105, .97, .15, .95)) else NULL
+    if (before) par3(plt = c(.105, .97, .15, .95)) else NULL
   })
 
 figw <- 7  # default is 7 and maximum possible is 8.3
@@ -58,7 +58,7 @@ knitr::opts_chunk$set(margin     = TRUE,
 ```
 
 
-## Contants
+## Constants
 
 The path to the data folder:
 
@@ -91,7 +91,7 @@ required <- c("sf", "readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr",
 Installing those that are not installed yet:
 
 ```{r}
-to_install <- required[! required %in% installed.packages()[,"Package"]]
+to_install <- required[! required %in% installed.packages()[, "Package"]]
 if (length(to_install)) install.packages(to_install)
 ```
 
@@ -109,17 +109,16 @@ A function that generates names of a vector of character strings from its conten
 ```{r}
 set_names2 <- function(x) {
   setNames(x, x |>
-             str_remove("^.*_") |> 
-             str_remove("^.*-") |> 
-             str_remove(".xlsx$"))
+                str_remove("^.*_") |> 
+                str_remove("^.*-") |> 
+                str_remove(".xlsx$"))
 }
 ```
 
-A tuning of the `text()` function:
+A tuning of the `text()` function that includes white background to the text:
 
 ```{r}
-text2 <- function(x, y, labels, cex = 1,
-                          bg = "white", padx = 10, pady = .1, ...) {
+text2 <- function(x, y, labels, cex = 1, bg = "white", padx = 10, pady = .1, ...) {
   w <- strwidth(labels, cex = cex)
   h <- strheight(labels, cex = cex)
   rect(x - w / 2 - padx, y - h / 2 - pady / 2, x + w / 2 + padx, y + h / 2 + pady / 2,
@@ -134,16 +133,18 @@ Tuning of the `rgb()` function:
 rgb2 <- function(...) rgb(..., maxColorValue = 255)
 ```
 
+Tunings of the `plot()` function:
+
+```{r}
+plot2 <- function(...) plot(..., axes = FALSE)
+plot3 <- function(...) plot2(..., ann = FALSE)
+plot4 <- function(...) plot3(..., type = "n")
+```
+
 A tuning of the `pie()` function:
 
 ```{r}
-pie2 <- function(x, ...) {
-  if (all(x == 0)) {
-    plot(1, ann = FALSE, axes = FALSE, type = "n")
-  } else {
-    pie(x, ...)
-  }
-}
+pie2 <- function(x, ...) if (all(x == 0)) plot4(1) else pie(x, ...)
 ```
 
 A function that pads a data frame of coordinates:
@@ -157,16 +158,23 @@ pad <- function(x) {
 }
 ```
 
-Tuning of the `abline()` function:
+Some tunings of the `abline()` function:
 
 ```{r}
 abline2 <- function(...) abline(..., col = "lightgrey")
+abline3 <- function(...) abline(..., col = "grey")
 ```
 
 Tuning of the `grep()` function:
 
 ```{r}
 grep2 <- function(pattern, x, ...) grep(x, pattern, value = TRUE, invert = TRUE, ...)
+```
+
+A tuning of the `mgcv::gam()` function:
+
+```{r}
+gam2 <- function(...) mgcv::gam(..., method = "REML")
 ```
 
 A function that retrieves the REML from a GAM model:
@@ -181,14 +189,70 @@ A function that retrieves the percentage of deviance explained from a GAM model:
 dev_explained <- function(x) summary(x)$dev.expl
 ```
 
-A tuning of the `mgcv::gam()` function:
+A tuning of the `segments()` function:
 
 ```{r}
-gam2 <- function(...) mgcv::gam(..., method = "REML")
+segments2 <- function(...) segments(..., col = 2, lwd = 4)
+```
+
+A function that extends the `tally()` function by adding a column of the corresponding
+proportions:
+
+```{r}
+tally2 <- function(x) {
+  x |> 
+    tally() |> 
+    mutate(prop = 100 * n / sum(n))
+}
+```
+
+A tuning of the `arrows()` function:
+
+```{r}
+arrows2 <- function(...) arrows(..., angle = 90, code = 3)
+```
+
+A tuning of the `points()` function:
+
+```{r}
+points2 <- function(...) points(..., pch = 19)
+```
+
+A tuning of the `par()` function:
+
+```{r}
+par2 <- function(...) par(..., cex = 1)
 ```
 
 
-## Loading data
+## Data
+
+### Functions
+
+A function that recodes sex:
+
+```{r}
+recode_sex <- function(x) {
+  sex_val <- sort(unique(x$sex))
+  males   <- grep("^M|na", sex_val, TRUE, value = TRUE)
+  females <- grep("^M|na", sex_val, TRUE, value = TRUE, invert = TRUE)
+  mutate(x, across(sex, ~ recode_values(.x, males ~ "male", females ~ "female")))
+}
+```
+
+A piece of code common to all the sample collections:
+
+```{r}
+common_data_processing <- function(x) {
+  x |> 
+    filter_out(if_all(everything(), is.na)) |>
+    recode_sex() |>
+    separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |>
+    mutate(across(titer, as.double))
+}
+```
+
+### Data
 
 Loading all the excel files of the data folder:
 
@@ -201,44 +265,7 @@ the3files <- path2data |>
   map(read_excel, "Marc", col_types = "text")
 ```
 
-A function that recode sex:
-
-```{r}
-recode_sex <- function(x) {
-  sex_val <- sort(unique(x$sex))
-  males   <- grep("^M|na", sex_val, TRUE, value = TRUE)
-  females <- grep("^M|na", sex_val, TRUE, value = TRUE, invert = TRUE)
-  mutate(x, across(sex, ~ recode_values(.x, males ~ "male", females ~ "female")))
-}
-```
-
-A piece of code common to all the collections:
-
-```{r}
-common_data_processing <- function(x) {
-  x |> 
-    filter(!if_all(everything(), is.na)) |>
-    recode_sex() |>
-    separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |>
-    mutate(across(titer, as.double))
-}
-```
-
-Combining the last two collections:
-
-```{r}
-last2collections <- the3files |> 
-  extract(c("Dec2022", "Apr24")) |> 
-  map(select, -date_collection) |> 
-  bind_rows() |> 
-  common_data_processing() |> 
-  mutate(collection_date = ymd(paste(year_collection, month_collection, day_collection,
-                                     sep = "-"))) |> 
-  select(participant, province, hospital, site, collection, sample_ID, age_group, age,
-         sex, collection_date, plate, titer, conclusion)
-```
-
-Now to the first collection:
+The first collection:
 
 ```{r}
 first_collection <- the3files$DEC2019 |> 
@@ -252,25 +279,33 @@ first_collection <- the3files$DEC2019 |>
          collection_date, plate, titer, conclusion)
 ```
 
-The total collection:
+Combining the collections:
 
 ```{r warning = FALSE}
-dataset <- last2collections |>
+dataset <- the3files |> 
+  extract(c("Dec2022", "Apr24")) |> 
+  map(select, -date_collection) |> 
+  bind_rows() |> 
+  common_data_processing() |> 
+  mutate(collection_date = ymd(paste(year_collection, month_collection, day_collection,
+                                     sep = "-"))) |> 
+  select(participant, province, hospital, site, collection, sample_ID, age_group, age,
+         sex, collection_date, plate, titer, conclusion) |> 
   bind_rows(first_collection) |> 
   mutate(province = ifelse(is.na(province), hospital, province),
-         across(province, ~ recode_values(.x, "AG" ~ "An Giang",
-                                              "BD" ~ "Binh Dinh",
-                                              "DL" ~ "Dak Lak",
-                                              "DT" ~ "Dong Thap",
-                                              "HC" ~ "HCMC",
-                                              "HU" ~ "Hue",
-                                              "KG" ~ "Kien Giang",
-                                              "KH" ~ "Khanh Hoa",
-                                              "QN" ~ "Quang Ngai",
-                                              "ST" ~ "Soc Trang",
+         across(province, ~ recode_values(.x, "AG"     ~ "An Giang",
+                                              "BD"     ~ "Binh Dinh",
+                                              "DL"     ~ "Dak Lak",
+                                              "DT"     ~ "Dong Thap",
+                                              "HC"     ~ "HCMC",
+                                              "HU"     ~ "Hue",
+                                              "KG"     ~ "Kien Giang",
+                                              "KH"     ~ "Khanh Hoa",
+                                              "QN"     ~ "Quang Ngai",
+                                              "ST"     ~ "Soc Trang",
                                               "Daklak" ~ "Dak Lak",
-                                              "HUE" ~ "Hue",
-                                              "HCM" ~ "HCMC", default = .x)),
+                                              "HUE"    ~ "Hue",
+                                              "HCM"    ~ "HCMC", default = .x)),
          year = year(collection_date),
          time_point = recode_values(year, 2019:2020 ~ "T1",
                                           2022:2023 ~ "T2", default = "T3"),
@@ -278,7 +313,7 @@ dataset <- last2collections |>
                                 collection == "42", "48", .x)),
          age_unit = str_remove_all(age, "\\d"),
          age2 = as.numeric(str_remove_all(age, "\\D")),
-         age3 = as.numeric(age),
+         age3 = as.numeric(age),  # note: this generate NAs
          age4 = ifelse(is.na(age3), ifelse(age_unit %in% c("M", "th"), age2 / 12,
                                            ifelse(age_unit == "ng", age2 / 365, age2)),
                        age3),
@@ -300,7 +335,7 @@ hash <- dataset |>
   with(setNames(site, province))
 ```
 
-Completing the site ID:
+Completing the site ID when missing:
 
 ```{r}
 dataset <- mutate(dataset, across(site, ~ ifelse(is.na(.x), hash[province], .x)))
@@ -312,12 +347,31 @@ Which gives:
 dataset
 ```
 
+Checking the thresholds:
+
+```{r}
+dataset |> 
+  filter(conclusion == "Neg") |> 
+  pull(titer) |> 
+  max()
+
+dataset |> 
+  filter(conclusion == "Equi") |> 
+  pull(titer) |> 
+  range()
+
+dataset |> 
+  filter(conclusion == "Pos") |> 
+  pull(titer) |> 
+  min()
+```
+
 
 ## Sampling locations
 
 Loading the `sf` object of the provinces of Vietnam:
 
-```{r}
+```{r message = FALSE}
 gadm1 <- readRDS(paste0(path2data, "gadm36_VNM_1_sf.rds"))
 st_crs(gadm1) <- st_crs(gadm1)
 ```
@@ -337,7 +391,6 @@ gadm1 |>
   st_geometry() |> 
   plot(col = "lightyellow")
 
-
 gadm1 |> 
   filter(VARNAME_1 %in% setdiff(sel, "Kien Giang")) |> 
   st_geometry() |> 
@@ -352,30 +405,34 @@ par(opar)
 ```
 
 
-## Overview of the data
+## Samples metadata
 
-Number of sample per site per time point:
+Number of samples per site per time point:
 
-```{r}
+```{r eval = FALSE}
 with(dataset, table(province, time_point))
 ```
 
-```{r}
-saveRDScache(with(dataset, table(province, time_point)), "nb_samples_prov_timepoint.rds")
+```{r echo = FALSE}
+(tmp <- with(dataset, table(province, time_point)))
+saveRDScache(tmp, "nb_samples_prov_timepoint.rds")
 ```
 
 A tuning of the `barplot()` function:
 
 ```{r}
-barplot2 <- function(x, ...) {
-  n1 <- 5; n2 <- 10; ad <- 20
-  with(x, {
-    barplot(Freq, space = 0, col = 4, ...)
-    mtext(province[1], line = -.5)
-  })
-  segments( 0, n1, ad, n1, col = 2, lwd = 4)
-  segments(ad, n2, 31, n2, col = 2, lwd = 4)
+make_barplot2 <- function(n1 = 5, n2 = 10, ad = 20) {
+  function(x, ...) {
+    with(x, {
+      barplot(Freq, space = 0, col = 4, ...)
+      mtext(province[1], line = -.5)
+    })
+    segments2( 0, n1, ad, n1)
+    segments2(ad, n2, 31, n2)
+  }
 }
+
+barplot2 <- make_barplot2()
 ```
 
 Number of sample per age class, per province, per time point:
@@ -387,7 +444,7 @@ tmp <- dataset |>
 
 ylim <- c(0, max(tmp$Freq))
 
-opar <- par(mfcol = c(10, 3), plt = c(.12, .985, .1, .9), cex = 1)
+opar <- par2(mfcol = c(10, 3), plt = c(.12, .985, .1, .9))
 tmp |> 
   group_by(time_point, province) |> 
   group_split() |> 
@@ -395,7 +452,7 @@ tmp |>
 par(opar)
 ```
 
-Number of sample per day and site:
+Number of samples per day and site:
 
 ```{r fig-nb_sample_day_site}
 hz_lines <- 1:10
@@ -407,12 +464,11 @@ dataset |>
   tally() |> 
   ungroup() |> 
   mutate(y = max(hz_lines) + 1 - as.numeric(as.factor(province))) |> 
-  with(plot(collection_date, y, cex = sqrt(n), ann = FALSE, axes = FALSE, col = 4,
-            xpd = TRUE))
+  with(plot3(collection_date, y, cex = sqrt(n), col = 4, xpd = TRUE))
 
 lb <- 2020:2024
 axis(1, ymd(paste(lb, "0101")), lb)
-abline(h = hz_lines, col = "grey")
+abline3(h = hz_lines)
 text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$province))
 
 par(opar)
@@ -421,8 +477,8 @@ par(opar)
 An alternative representation:
 
 ```{r fig-cum_nb_sample}
-plot(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), axes = FALSE,
-     xlab = NA, ylab = "cumulative number of samples")
+plot2(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), xlab = NA,
+      ylab = "cumulative number of samples")
 axis(1, ymd(paste(lb, "0101")), lb); axis(2)
 
 dataset |> 
@@ -458,88 +514,95 @@ dataset |>
 par(opar)
 ```
 
-```{r}
-dataset |> 
-  filter(conclusion == "Neg") |> 
-  pull(titer) |> 
-  max()
 
-dataset |> 
-  filter(conclusion == "Equi") |> 
-  pull(titer) |> 
-  range()
+## Titer distribution
 
-dataset |> 
-  filter(conclusion == "Pos") |> 
-  pull(titer) |> 
-  min()
-```
+A function that plots a 3-color distribution from a 2-column data frame `df` that
+contains the coordinates of the distribution, with $x$-values in the first column
+named `x` and $y$-values in the second column, on a decimal log scale of the $x$
+values:
 
 ```{r}
-ptiters <- function(df, f = log10, ...) {
-  plot(df, type = "n", xlab = "titer (IU/L)", ylab = "density", axes = FALSE, ...)
-  lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
-  lb2 <- 1:5
-  axis(1, log10(lb1), NA, tcl =  - .25)
-  axis(1, lb2, 10^lb2)
-  axis(2)
+ptiters <- function(df, main = NULL, th1 = 150, th2 = 200, lb2 = 1:5, ...) {
+  plot2(df, type = "n", xlab = "titer (IU/L)", ylab = "density", ...)
+  lb1 <- unlist(map(10^(lb2), ~ .x * 1:10))
+  axis(1, log10(lb1), NA, tcl = - .25); axis(1, lb2, 10^lb2); axis(2)
   df |> 
-    group_by(cut(x, c(-Inf, f(c(150, 200)), Inf))) |> 
+    group_by(cut(x, c(-Inf, log10(c(th1, th2)), Inf))) |> 
     group_map(~ pad(.x)) |> 
     walk2(c(2, 7, 3), ~ polygon(.x, col = .y, border = NA))
+  if (! is.null(main)) title(main, line = -.25, cex.main = 1)
 }
 ```
 
+A function that (1) generates the 2-column input data frame of the function
+`ptiters()` from the column named `titer` of the data frame `df` and then (2) feeds it
+to the `ptiters()` function to draw the 3-color distribution:
+
 ```{r}
-plot_titers <- function(df, f = log10, ...) {
+plot_titers <- function(df, main = NULL, ...) {
   df |> 
     pull(titer) |> 
-    f() |> 
+    log10() |> 
     density() |> 
     extract(1:2) |> 
     as_tibble() |> 
-    ptiters(f, ...)
+    ptiters(main, ...)
 }
 ```
 
-Plotting the titers:
+Plotting the distribution of all the titers, across the 3 time points and the 10 sites:
 
 ```{r fig-distribution_titers}
 plot_titers(dataset)
 ```
 
+The corresponding proportions in each of the 3 categories of titer values are the
+following:
+
 ```{r}
 dataset |> 
   group_by(conclusion) |> 
-  tally() |> 
-  mutate(prop = 100 * n / sum(n))
+  tally2()
 ```
 
+The distributions of all the titers across the 10 sites for each time point separately:
+
 ```{r fig-distribution_titers_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
-opar <- par(mfrow = c(3, 1), cex = 1, plt = c(.13, .97, .18, .95))
+opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
-  group_walk(~ plot_titers(.x, xlim = c(.5, 4.5), ylim = c(0, .8)))
+  group_split() |> 
+  walk2(c(paste("Dec", c(2019, 2022)), "Apr 2024"),
+        ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, .8)))
 par(opar)
 ```
+
+The corresponding proportions in each of the 3 categories of titer values and for each
+time point are the following:
 
 ```{r}
 dataset |> 
   group_by(time_point, conclusion) |> 
-  tally() |> 
-  mutate(prop = 100 * n / sum(n)) |> 
+  tally2() |> 
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
 ```
 
 
-## Titer age
+## Sero-prevalence
+
+This function takes a data frame `x` as input that contains at least 2 columns named
+`conclusion` and `n` that are character and numeric values respectively. The
+`conclusion` column as one of its values equal to `Pos`. The output of the function is
+a named vector of 3 values being the estimate of the proportion of `Pos` and the lower
+and upper bounds of the 95% confidence interval of this estimate.
 
 ```{r}
 estimate_prop <- function(x) {
   slot_names <- c("p", "l", "u")
   x <- with(x, setNames(n, conclusion))
   n <- sum(x)
-  if (n < 1) return(setNames(rep(NA_real_, 3), slot_names))
+  if (n < 1) return(setNames(rep(NA, 3), slot_names))
   binom.test(x["Pos"], n) |> 
     extract(c("estimate", "conf.int")) |> 
     unlist() |> 
@@ -547,41 +610,53 @@ estimate_prop <- function(x) {
 }
 ```
 
-```{r}
-xs <- c(.5:19.5, seq(22.5, 67.5, 5), 75)
-
-p_age_profile <- function(x) {
-  plot(xs, rep(.5, length(xs)), ylim = 0:1, type = "n", xaxs = "i", yaxs = "i",
-       xlim = c(0, 80),
-       xlab = "age classe (years)", ylab = "sero-prevalence")
-  abline2(v = seq(0, 70, 5))
-  abline2(h = seq(0, 1, .1))
-  with(x, {
-    arrows(xs, l, xs, u, .02, 90, 3, col = 4)
-    points(xs, p, pch = 19, col = 4)
-  })
-  box(bty = "o")
-}
-```
+This function takes a data frame that contains at least 2 columns named `age_group`, 
+`conclusion` and as many rows as observations. It returns a data frame with 3 columns
+(proportion estimate and confidence interval bounds) and as many rows as age groups:
 
 ```{r}
-template <- dataset |> 
-  group_by(age_group, conclusion) |> 
-  tally() |> 
-  ungroup() |> 
-  select(-n)
-
-prepare_data <- function(x) {
-  x |> 
-    group_by(age_group, conclusion) |> 
-    tally() |> 
-    left_join(x = template, y = _, c("age_group", "conclusion")) |> 
-    replace_na(list(n = 0)) |> 
-    group_by(age_group) |> 
-    group_split() |> 
-    map_dfr(estimate_prop)
+make_prepare_data <- function(template = dataset |> 
+                                group_by(age_group, conclusion) |> 
+                                tally() |> 
+                                ungroup() |> 
+                                select(-n)) {
+  function(x) {
+    x |> 
+      group_by(age_group, conclusion) |> 
+      tally() |> 
+      left_join(x = template, y = _, c("age_group", "conclusion")) |> 
+      replace_na(list(n = 0)) |> 
+      group_by(age_group) |> 
+      group_split() |> 
+      map_dfr(estimate_prop)
+  }
 }
+
+prepare_data <- make_prepare_data()
 ```
+
+This function takes the ouptut of `prepare_data()` and plots the sero-prevalence per
+age group:
+
+```{r}
+make_p_age_profile <- function(xs = c(.5:19.5, seq(22.5, 67.5, 5), 75)) {
+  function(x) {
+    plot(xs, rep(.5, length(xs)), ylim = 0:1, type = "n", xaxs = "i", yaxs = "i",
+         xlim = c(0, 80), xlab = "age classe (years)", ylab = "sero-prevalence")
+    abline2(v = seq(0, 70, 5))
+    abline2(h = seq(0, 1, .1))
+    with(x, {
+      arrows2(xs, l, xs, u, .02, col = 4)
+      points2(xs, p, col = 4)
+    })
+    box(bty = "o")
+  }
+}
+
+p_age_profile <- make_p_age_profile()
+```
+
+Wrapping up `prepare_data()` and `p_age_profile()`:
 
 ```{r}
 plot_age_profile <- function(x) {
@@ -591,17 +666,28 @@ plot_age_profile <- function(x) {
 }
 ```
 
+The age profile of sero-prevalence across the 3 time points and the 10 sites:
+
 ```{r fig-age_profile}
 plot_age_profile(dataset)
 ```
 
+The age profile of sero-prevalence across the 10 sites and for the 3 time points
+separately:
+
 ```{r fig-age_profile_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
-opar <- par(mfrow = c(3, 1), cex = 1, plt = c(.13, .97, .18, .95))
+opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
   group_walk(~ plot_age_profile(.x))
 par(opar)
 ```
+
+`x` is a list of data frames of 3 columns (proportion estimates and confidence interval
+bounds). The number of rows of the data frames is equal to the number age group and the
+number of slot of the list `x` is equal to the number of time points. The following
+function returns a list of data frames of 3 columns too where the number of slots of
+the list and the number of rows of the data frames are switched.
 
 ```{r}
 time_change <- function(x) {
@@ -609,31 +695,28 @@ time_change <- function(x) {
 }
 ```
 
-```{r}
-a <- dataset |> 
-  group_by(time_point) |> 
-  group_split() |> 
-  map(prepare_data) |> 
-  time_change()
-```
+This function takes a 3-column (proportion estimate and confidence interval bounds) /
+3-row (for 3 time points) data frame that corresponds to a given age group and plots 
+the change in sero-prevalence as a function of time.
 
 ```{r}
-time_trend <- function(x) {
-  xs <- 1:3
-  col <- 4
+time_trend <- function(x, xs = 1:3, col = 4) {
   with(x, {
-    plot(xs, p, xlim = c(0, 4), ylim = 0:1, type = "n", axes = FALSE, ann = FALSE)
-    abline(h = seq(.2, .8, .2), col = "lightgrey")
-    arrows(xs, l, xs, u, .05, 90, 3, col = col)
-    points(xs, p, col = col, pch = 19)
+    plot4(xs, p, xlim = c(0, 4), ylim = 0:1)
+    abline2(h = seq(.2, .8, .2))
+    arrows2(xs, l, xs, u, .05, col = col)
+    points2(xs, p, col = col)
     box(bty = "o")
   })
 }
 ```
 
+Showing the change in seroprevalence as a function of time for all the age groups
+separately:
+
 ```{r fig-seroprevalence_trends, fig.width = 8.4, fig.height = 1.8}
 epsl <- .065
-opar <- par(mfrow = c(3, 10), cex = 1, plt = rep(c(epsl, 1 - epsl), 2))
+opar <- par(mfrow = c(3, 10), plt = rep(c(epsl, 1 - epsl), 2))
 dataset |> 
   filter_out(age_group == last(levels(age_group))) |> 
   group_by(time_point) |> 
@@ -698,7 +781,7 @@ if (file_exists("models.rds")) {
 Which gives:
 
 ```{r}
-models
+select(models, -model)
 ```
 
 ```{r}
@@ -727,8 +810,8 @@ plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL
     if (is.null(ylim)) ylim <- pred |> 
         select(-x) |> 
         range()
-    plot(x, fit, type = "n", ylim = ylim, xaxs = "i", axes = FALSE, ylab = ylab,
-         xlab = "age (years)", ...)
+    plot2(x, fit, type = "n", ylim = ylim, xaxs = "i", ylab = ylab,
+          xlab = "age (years)", ...)
   })
   if (ylog) {
     lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
@@ -739,13 +822,12 @@ plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL
     axis(2)
   }
   axis(1)
-  abline(v = c(.75, 1.5, seq(5, 65, 10)), col = "lightgrey")
-  abline(v = seq(10, 60, 10), col = "grey")
+  abline2(v = c(.75, 1.5, seq(5, 65, 10)))
+  abline3(v = seq(10, 60, 10))
   add_ribbon(pred, col)
   box(bty = "o")
 }
 ```
-
 
 Let's then stick to the thin plate smoothing. Plotting smoothed trends:
 
@@ -797,7 +879,7 @@ if (file_exists("models_prev.rds")) {
 which gives:
 
 ```{r}
-models_prev
+select(models_prev, -model)
 ```
 
 ```{r fig-gam_seroprev}
@@ -807,7 +889,7 @@ models_prev |>
   first() |>
   predict2() |>
   plot_pred(ylog = FALSE, ylab = "prevalence", ylim = 0:1, yaxs = "i")
-abline(h = 1:9 / 10, col = "grey")
+abline3(h = 1:9 / 10)
 ```
 
 ```{r}
@@ -820,7 +902,7 @@ plot_seroprevalences <- function(data) {
     predict2() |> 
     add_ribbon(2)
   
-  abline(h = 1:9 / 10, col = "grey")
+  abline3(h = 1:9 / 10)
 }
 ```
 

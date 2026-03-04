@@ -6,7 +6,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-
 ```{r include = FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
@@ -19,17 +18,17 @@ make_path <- function(x) paste0(path2cache, x)
 readRDScache <- function(x) readRDS(make_path(x))
 ```
 
-::: {.callout-note}
-Full analysis (with R code): [https://choisy.github.io/measles_serology](https://choisy.github.io/measles_serology)
+::: callout-note
+Full analysis (with R code): <https://choisy.github.io/measles_serology>
 
-GitHub repository: [https://github.com/choisy/measles_serology](https://github.com/choisy/measles_serology)
+GitHub repository: <https://github.com/choisy/measles_serology>
 
 Leave comments or make suggestions by posting an issue [here](https://github.com/choisy/measles_serology/issues) (click on the green button in the top right corner).
 :::
 
 The locations of provinces on the map:
 
-![Sampled provinces in red. Only December 2019 for Kien Giang in orange.](index_files/figure-html/fig-map-1.png){#fig-map width=470px}
+![Sampled provinces in red. Only December 2019 for Kien Giang in orange.](index_files/figure-html/fig-map-1.png){#fig-map width="470px"}
 
 The number of samples per time point per province:
 
@@ -37,20 +36,20 @@ The number of samples per time point per province:
 readRDScache("nb_samples_prov_timepoint.rds")
 ```
 
-![Number of samples as a function of collection time.](index_files/figure-html/fig-sampling_intensity-1.png){#fig-sampling_intensity width=537.5px}
+![Number of samples as a function of collection time.](index_files/figure-html/fig-sampling_intensity-1.png){#fig-sampling_intensity width="537.5px"}
 
-![Number of samples as a function of collection time and province.](index_files/figure-html/fig-nb_sample_day_site-1.png){#fig-nb_sample_day_site width=537.5px}
+![Number of samples as a function of collection time and province.](index_files/figure-html/fig-nb_sample_day_site-1.png){#fig-nb_sample_day_site width="537.5px"}
 
-![Age distribution of samples per province and time point. The red lines show the target: 5 samples per 1-year age class from 0 to 20 year old and 10 samples per 5-year age class from 20 to 70 year old.](index_files/figure-html/fig-nb_samples_site_timepoint_ageclass-1.png){#fig-nb_samples_site_timepoint_ageclass width=672px}
+![Age distribution of samples per province and time point. The red lines show the target: 5 samples per 1-year age class from 0 to 20 year old and 10 samples per 5-year age class from 20 to 70 year old.](index_files/figure-html/fig-nb_samples_site_timepoint_ageclass-1.png){#fig-nb_samples_site_timepoint_ageclass width="672px"}
 
-![Sex distribution per province and time point (pink: females, blue: males).](index_files/figure-html/fig-sex_distribution-1.png){#fig-sex_distribution width=470px}
+![Sex distribution per province and time point (pink: females, blue: males).](index_files/figure-html/fig-sex_distribution-1.png){#fig-sex_distribution width="470px"}
 
-![Distribution of titers on a decimal logarithm scale with the 2 thresholds from the manufacturer for interpretation: <150 IU is negative (red), >200 IU is positive (green) and between 150 and 200 IU is equivocal (orange).](index_files/figure-html/fig-distribution_titers-1.png){#fig-distribution_titers width=537.5px}
+![Distribution of titers on a decimal logarithm scale with the 2 thresholds from the manufacturer for interpretation: \<150 IU is negative (red), \>200 IU is positive (green) and between 150 and 200 IU is equivocal (orange).](index_files/figure-html/fig-distribution_titers-1.png){#fig-distribution_titers width="537.5px"}
 
-![Distribution of titers on a decimal logarithm scale with the 2 thresholds from the manufacturer for interpretation: <150 IU is negative (red), >200 IU is positive (green) and between 150 and 200 IU is equivocal (orange). The 3 time points are shown chronologically from top to bottom.](index_files/figure-html/fig-distribution_titers_timepoints-1.png){#fig-distribution_titers_timepoints width=376px}
+![Distribution of titers on a decimal logarithm scale with the 2 thresholds from the manufacturer for interpretation: \<150 IU is negative (red), \>200 IU is positive (green) and between 150 and 200 IU is equivocal (orange). The 3 time points are shown chronologically from top to bottom.](index_files/figure-html/fig-distribution_titers_timepoints-1.png){#fig-distribution_titers_timepoints width="376px"}
 
-![Seroprevalence per age class, using the 200 IU as a threshold, with 95% confidence intervals.](index_files/figure-html/fig-age_profile-1.png){#fig-age_profile width=537.5px}
+![Seroprevalence per age class, using the 200 IU as a threshold, with 95% confidence intervals.](index_files/figure-html/fig-age_profile-1.png){#fig-age_profile width="537.5px"}
 
-![Seroprevalence per age class, using the 200 IU as a threshold, with 95% confidence intervals. The 3 time points are shown chronologically from top to bottom.](index_files/figure-html/fig-age_profile_timepoints-1.png){#fig-age_profile_timepoints width=376px}
+![Seroprevalence per age class, using the 200 IU as a threshold, with 95% confidence intervals. The 3 time points are shown chronologically from top to bottom.](index_files/figure-html/fig-age_profile_timepoints-1.png){#fig-age_profile_timepoints width="376px"}
 
-![Same as @fig-age_profile_timepoints shown differently: each panel is an age class from younger to older from top left to bottom right. Each panel shows the seroprevalence with 95% confidence intervals for the 3 time points chronologically from left to right.](index_files/figure-html/fig-seroprevalence_trends-1.png){#fig-seroprevalence_trends width=806px}
+![Same as @fig-age_profile_timepoints shown differently: each panel is an age class from younger to older from top left to bottom right. Each panel shows the seroprevalence with 95% confidence intervals for the 3 time points chronologically from left to right.](index_files/figure-html/fig-seroprevalence_trends-1.png){#fig-seroprevalence_trends width="806px"}

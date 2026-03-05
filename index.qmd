@@ -224,6 +224,15 @@ A tuning of the `par()` function:
 par2 <- function(...) par(..., cex = 1)
 ```
 
+A function that adds the $y$-axis on a log scale:
+
+```{r}
+logyaxis <- function(po10 = 1:5) {
+  axis(2, log10(unlist(map(10^(po10), ~ .x * 1:10))), NA, tcl = - .25)
+  axis(2, po10, 10^po10)
+}
+```
+
 
 ## Data
 
@@ -590,8 +599,54 @@ dataset |>
 
 ### Age profile
 
-```{r fig-titers_raw_data}
-with(dataset, plot(age, log10(titer), col = adjustcolor("black", .2)))
+
+```{r}
+image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)",
+                                    min_titer = NULL, max_titer = NULL) {
+  if (is.null(min_titer)) min_titer <- min(data$log_titer)
+  if (is.null(max_titer)) max_titer <- max(data$log_titer)
+  
+  data |> 
+    filter(age < 70) |> 
+    group_by(age_group) |> 
+    group_map(~ density(.x$log_titer, from = min_titer, to = max_titer)$y) |> 
+    rep(c(rep(1, 20), rep(5, 10))) |> 
+    as.data.frame() |> 
+    as.matrix() |> 
+    t() |>
+    image(1:70 - .5, seq(min_titer, max_titer, le = 512), z = _, axes = FALSE,
+          xlab = xlab, ylab = "titer (IU/L)",
+          col = hcl.colors(256, "YlOrRd", rev = TRUE))
+  
+  if (xaxis) axis(1)
+  logyaxis()
+
+  abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
+  
+  box(bty = "o")
+}
+```
+
+```{r}
+add_years_on_top <- function(at = 10 * 0:7, line = 1.7) {
+  axis(3, at)
+  mtext("age (years)", line = line)
+}
+```
+
+```{r fig-titer_density_age, fig.height = 2 * eps * figh}
+opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
+dataset |> 
+  filter_out(age_group == "[70,100)") |> 
+  with(plot(age, log10(titer), col = adjustcolor(4, .2), xlim = c(0, 70), axes = FALSE,
+            xlab = NA, ylab = "titer (IU/L)", xaxs = "i", xpd = TRUE))
+logyaxis(); box(bty = "o")
+add_years_on_top()
+par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
+dataset |> 
+  mutate(log_titer = log10(titer)) |> 
+  image_titer_density_age()
+par(opar)
 ```
 
 
@@ -884,49 +939,16 @@ plot_seroprevalences(data2)
 * model density() in 2D in order to see density of data points not only as a function 
 of age but also as a function of titers
 
-```{r}
-image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)",
-                                    min_titer = NULL, max_titer = NULL) {
-  if (is.null(min_titer)) min_titer <- min(data$log_titer)
-  if (is.null(max_titer)) max_titer <- max(data$log_titer)
-  
-  data |> 
-    filter(age < 70) |> 
-    group_by(age_group) |> 
-    group_map(~ density(.x$log_titer, from = min_titer, to = max_titer)$y) |> 
-    rep(c(rep(1, 20), rep(5, 10))) |> 
-    as.data.frame() |> 
-    as.matrix() |> 
-    t() |>
-    image(1:70 - .5, seq(min_titer, max_titer, le = 512), z = _, axes = FALSE,
-          xlab = xlab, ylab = "titer (IU/L)",
-          col = hcl.colors(256, "YlOrRd", rev = TRUE))
-  
-  if (xaxis) axis(1)
-  lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
-  lb2 <- 1:5
-  axis(2, log10(lb1), NA, tcl =  - .25)
-  axis(2, lb2, 10^lb2)
-  
-  abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
-  
-  box(bty = "o")
-}
-```
-
-```{r fig-titer_density_age}
-image_titer_density_age(data2)
-```
 
 ```{r fig-titers_seroprevalences, fig.height = 2 * eps * figh}
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
 image_titer_density_age(data2, xaxis = FALSE, xlab = NA, min_titer = log10(5))
-axis(3, 10 * 0:7)
-mtext("age (years)", line = 1.7)
+add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
 plot_seroprevalences(data2)
 par(opar)
 ```
+
 
 
 * doing clustering on the ANCOVA

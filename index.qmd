@@ -588,6 +588,12 @@ dataset |>
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
 ```
 
+### Additional
+
+```{r fig-titers_raw_data}
+with(dataset, plot(age, log10(titer), col = adjustcolor("black", .2)))
+```
+
 
 ## Sero-prevalence
 
@@ -728,12 +734,7 @@ dataset |>
 par(opar)
 ```
 
-## GAM models
-
-```{r fig-titers_raw_data}
-dataset |> 
-  with(plot(age, log10(titer), col = adjustcolor("black", .2)))
-```
+### Additional
 
 ```{r}
 data2 <- mutate(dataset, log_titer = log10(titer),
@@ -741,48 +742,7 @@ data2 <- mutate(dataset, log_titer = log10(titer),
                 positive2 = titer > 150)
 ```
 
-All the 10 smoothing bases more or less perform equally well:
-
-```{r eval = FALSE}
-models <- tibble(
-  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
-                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
-                      "cyclic P-spline", "Gaussian process"),
-  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-  mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
-                                    data = data2)),
-         REML    = map_dbl(model, get_reml),
-         per_dev = map_dbl(model, dev_explained),
-         AIC     = map_dbl(model, AIC),
-         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
-  unnest_wider(k_check)
-```
-
-```{r include = FALSE}
-if (file_exists("models.rds")) {
-  models <- readRDScache("models.rds")
-} else {
-  models <- tibble(
-    smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
-                        "cubic regression", "cyclic cubic", "B-spline", "P-spline",
-                        "cyclic P-spline", "Gaussian process"),
-    code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-    mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
-                                      data = data2)),
-           REML    = map_dbl(model, get_reml),
-           per_dev = map_dbl(model, dev_explained),
-           AIC     = map_dbl(model, AIC),
-           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
-    unnest_wider(k_check)
-  saveRDScache(models, "models.rds")
-}
-```
-
-Which gives:
-
-```{r}
-select(models, -model)
-```
+#### Functions
 
 ```{r}
 predict2 <- function(model, x = seq(0, 70, le = 512)) {
@@ -829,17 +789,22 @@ plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL
 }
 ```
 
-Let's then stick to the thin plate smoothing. Plotting smoothed trends:
-
-```{r fig-gam_titer}
-models |> 
-  filter(code == "tp") |> 
-  pull(model) |> 
-  first() |>
-  predict2() |> 
-  plot_pred()
-abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
+```{r}
+plot_seroprevalences <- function(data) {
+  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
+    predict2() |> 
+    plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 3)
+  
+  gam2(positive2 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
+    predict2() |> 
+    add_ribbon(2)
+  
+  abline3(h = 1:9 / 10)
+}
 ```
+
+
+#### Analysis
 
 ```{r eval = FALSE}
 models_prev <- tibble(
@@ -882,6 +847,8 @@ which gives:
 select(models_prev, -model)
 ```
 
+Let's then stick to the thin plate smoothing. Plotting smoothed trends:
+
 ```{r fig-gam_seroprev}
 models_prev |> 
   filter(code == "tp") |> 
@@ -892,23 +859,68 @@ models_prev |>
 abline3(h = 1:9 / 10)
 ```
 
-```{r}
-plot_seroprevalences <- function(data) {
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
-    predict2() |> 
-    plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 3)
-  
-  gam2(positive2 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
-    predict2() |> 
-    add_ribbon(2)
-  
-  abline3(h = 1:9 / 10)
-}
-```
-
 ```{r fig-gam_seroprev2}
 plot_seroprevalences(data2)
 ```
+
+
+## GAM models
+
+All the 10 smoothing bases more or less perform equally well:
+
+```{r include=FALSE, eval = FALSE}
+models <- tibble(
+  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                      "cyclic P-spline", "Gaussian process"),
+  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+  mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
+                                    data = data2)),
+         REML    = map_dbl(model, get_reml),
+         per_dev = map_dbl(model, dev_explained),
+         AIC     = map_dbl(model, AIC),
+         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+  unnest_wider(k_check)
+```
+
+```{r include = FALSE, eval=FALSE}
+if (file_exists("models.rds")) {
+  models <- readRDScache("models.rds")
+} else {
+  models <- tibble(
+    smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
+                        "cubic regression", "cyclic cubic", "B-spline", "P-spline",
+                        "cyclic P-spline", "Gaussian process"),
+    code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
+    mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
+                                      data = data2)),
+           REML    = map_dbl(model, get_reml),
+           per_dev = map_dbl(model, dev_explained),
+           AIC     = map_dbl(model, AIC),
+           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+    unnest_wider(k_check)
+  saveRDScache(models, "models.rds")
+}
+```
+
+Which gives:
+
+```{r include=FALSE, eval=FALSE}
+select(models, -model)
+```
+
+Let's then stick to the thin plate smoothing. Plotting smoothed trends:
+
+```{r fig-gam_titer, include=FALSE, eval=FALSE}
+models |> 
+  filter(code == "tp") |> 
+  pull(model) |> 
+  first() |>
+  predict2() |> 
+  plot_pred()
+abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
+```
+
 
 
 ## TO DO

@@ -227,9 +227,9 @@ par2 <- function(...) par(..., cex = 1)
 A function that adds the $y$-axis on a log scale:
 
 ```{r}
-logyaxis <- function(po10 = 1:5) {
-  axis(2, log10(unlist(map(10^(po10), ~ .x * 1:10))), NA, tcl = - .25)
-  axis(2, po10, 10^po10)
+logaxis <- function(side, po10 = 1:5) {
+  axis(side, log10(unlist(map(10^(po10), ~ .x * 1:10))), NA, tcl = - .25)
+  axis(side, po10, 10^po10)
 }
 ```
 
@@ -430,18 +430,14 @@ saveRDScache(tmp, "nb_samples_prov_timepoint.rds")
 A tuning of the `barplot()` function:
 
 ```{r}
-make_barplot2 <- function(n1 = 5, n2 = 10, ad = 20) {
-  function(x, ...) {
-    with(x, {
-      barplot(Freq, space = 0, col = 4, ...)
-      mtext(province[1], line = -.5)
-    })
-    segments2( 0, n1, ad, n1)
-    segments2(ad, n2, 31, n2)
-  }
+barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...) {
+  with(x, {
+    barplot(Freq, space = 0, col = col, ...)
+    mtext(province[1], line = -.5)
+  })
+  segments2(mn, n1, ad, n1)
+  segments2(ad, n2, mx, n2)
 }
-
-barplot2 <- make_barplot2()
 ```
 
 Number of sample per age class, per province, per time point:
@@ -504,7 +500,7 @@ dataset |>
   group_by(collection_date) |> 
   tally() |> 
   with(plot(collection_date, n, type = "h", col = "4", xlab = NA,
-            ylab = "sampling intensity (/day)"))
+            ylab = "sampling intensity (nb samples/day)"))
 ```
 
 Gender distribution:
@@ -534,8 +530,7 @@ values:
 ```{r}
 ptiters <- function(df, main = NULL, th1 = 150, th2 = 200, lb2 = 1:5, ...) {
   plot2(df, type = "n", xlab = "titer (IU/L)", ylab = "density", ...)
-  lb1 <- unlist(map(10^(lb2), ~ .x * 1:10))
-  axis(1, log10(lb1), NA, tcl = - .25); axis(1, lb2, 10^lb2); axis(2)
+  logaxis(1); axis(2)
   df |> 
     group_by(cut(x, c(-Inf, log10(c(th1, th2)), Inf))) |> 
     group_map(~ pad(.x)) |> 
@@ -619,7 +614,7 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)",
           col = hcl.colors(256, "YlOrRd", rev = TRUE))
   
   if (xaxis) axis(1)
-  logyaxis()
+  logaxis(2)
 
   abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
   
@@ -640,7 +635,7 @@ dataset |>
   filter_out(age_group == "[70,100)") |> 
   with(plot(age, log10(titer), col = adjustcolor(4, .2), xlim = c(0, 70), axes = FALSE,
             xlab = NA, ylab = "titer (IU/L)", xaxs = "i", xpd = TRUE))
-logyaxis(); box(bty = "o")
+logaxis(2); box(bty = "o")
 add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
 dataset |> 

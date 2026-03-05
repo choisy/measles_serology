@@ -592,26 +592,33 @@ dataset |>
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
 ```
 
+
 ### Age profile
 
 
 ```{r}
-image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)",
-                                    min_titer = NULL, max_titer = NULL) {
-  if (is.null(min_titer)) min_titer <- min(data$log_titer)
-  if (is.null(max_titer)) max_titer <- max(data$log_titer)
+image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n = 512,
+                                    min_titer = NULL, max_titer = NULL, buff = TRUE) {
+  if (is.null(min_titer)) min_titer <- min(data$titer)
+  if (is.null(max_titer)) max_titer <- max(data$titer)
+
+  if (buff) {
+    bf <- .04 * (max_titer - min_titer)
+    min_titer <- min_titer - bf
+    max_titer <- max_titer + bf
+  }
   
   data |> 
     filter(age < 70) |> 
     group_by(age_group) |> 
-    group_map(~ density(.x$log_titer, from = min_titer, to = max_titer)$y) |> 
-    rep(c(rep(1, 20), rep(5, 10))) |> 
+    group_map(~ density(.x$titer, from = min_titer, to = max_titer, n = n)$y) |> 
+    rep(c(rep(1, 20), rep(5, 10))) |> # age classes
     as.data.frame() |> 
     as.matrix() |> 
     t() |>
-    image(1:70 - .5, seq(min_titer, max_titer, le = 512), z = _, axes = FALSE,
+    image(1:70 - .5, seq(min_titer, max_titer, le = n), z = _, axes = FALSE,
           xlab = xlab, ylab = "titer (IU/L)",
-          col = hcl.colors(256, "YlOrRd", rev = TRUE))
+          col = hcl.colors(n, "YlOrRd", rev = TRUE))
   
   if (xaxis) axis(1)
   logaxis(2)
@@ -638,8 +645,8 @@ dataset |>
 logaxis(2); box(bty = "o")
 add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-dataset |> 
-  mutate(log_titer = log10(titer)) |> 
+dataset |>
+  mutate(across(titer, log10)) |> 
   image_titer_density_age()
 par(opar)
 ```

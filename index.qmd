@@ -515,7 +515,7 @@ par(opar)
 ```
 
 
-## Titer distribution
+## Titers
 
 A function that plots a 3-color distribution from a 2-column data frame `df` that
 contains the coordinates of the distribution, with $x$-values in the first column
@@ -588,7 +588,7 @@ dataset |>
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
 ```
 
-### Additional
+### Age profile
 
 ```{r fig-titers_raw_data}
 with(dataset, plot(age, log10(titer), col = adjustcolor("black", .2)))
@@ -734,7 +734,9 @@ dataset |>
 par(opar)
 ```
 
-### Additional
+### GAM
+
+Augmenting the data:
 
 ```{r}
 data2 <- mutate(dataset, log_titer = log10(titer),
@@ -743,6 +745,8 @@ data2 <- mutate(dataset, log_titer = log10(titer),
 ```
 
 #### Functions
+
+A tuning of the `predict()` function:
 
 ```{r}
 predict2 <- function(model, x = seq(0, 70, le = 512)) {
@@ -754,6 +758,8 @@ predict2 <- function(model, x = seq(0, 70, le = 512)) {
 }
 ```
 
+A function that adds prediction and confidence interval to a plot:
+
 ```{r}
 add_ribbon <- function(pred, col = 4) {
   with(pred, {
@@ -762,6 +768,9 @@ add_ribbon <- function(pred, col = 4) {
   })
 }
 ```
+
+where `pred` is an output of the `predict2()` function and a 4-column data frame with
+names `x`, `fit`, `ll` and `ul`. This function plots the predictions of a GAM model:
 
 ```{r}
 plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL,
@@ -789,13 +798,16 @@ plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL
 }
 ```
 
+where `pred` is an output of the `predict2()` function. A wrapper around the
+`predict2()`, `plot_pred()` and `add_ribbon()` functions:
+
 ```{r}
-plot_seroprevalences <- function(data) {
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
+plot_seroprevalences <- function(data, bs = "tp", k = 50) {
+  gam2(positive1 ~ s(age, bs = bs, k = k), binomial, data) |> 
     predict2() |> 
     plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 3)
   
-  gam2(positive2 ~ s(age, bs = "tp", k = 50), binomial, data) |> 
+  gam2(positive2 ~ s(age, bs = bs, k = k), binomial, data) |> 
     predict2() |> 
     add_ribbon(2)
   
@@ -805,6 +817,9 @@ plot_seroprevalences <- function(data) {
 
 
 #### Analysis
+
+Let's try 10 smooting basis to see whether one stands out as much better that the
+others:
 
 ```{r eval = FALSE}
 models_prev <- tibble(
@@ -862,65 +877,6 @@ abline3(h = 1:9 / 10)
 ```{r fig-gam_seroprev2}
 plot_seroprevalences(data2)
 ```
-
-
-## GAM models
-
-All the 10 smoothing bases more or less perform equally well:
-
-```{r include=FALSE, eval = FALSE}
-models <- tibble(
-  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
-                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
-                      "cyclic P-spline", "Gaussian process"),
-  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-  mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
-                                    data = data2)),
-         REML    = map_dbl(model, get_reml),
-         per_dev = map_dbl(model, dev_explained),
-         AIC     = map_dbl(model, AIC),
-         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
-  unnest_wider(k_check)
-```
-
-```{r include = FALSE, eval=FALSE}
-if (file_exists("models.rds")) {
-  models <- readRDScache("models.rds")
-} else {
-  models <- tibble(
-    smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
-                        "cubic regression", "cyclic cubic", "B-spline", "P-spline",
-                        "cyclic P-spline", "Gaussian process"),
-    code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-    mutate(model   = map(code, ~ gam2(log_titer ~ s(age, bs = .x, k = 50),
-                                      data = data2)),
-           REML    = map_dbl(model, get_reml),
-           per_dev = map_dbl(model, dev_explained),
-           AIC     = map_dbl(model, AIC),
-           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
-    unnest_wider(k_check)
-  saveRDScache(models, "models.rds")
-}
-```
-
-Which gives:
-
-```{r include=FALSE, eval=FALSE}
-select(models, -model)
-```
-
-Let's then stick to the thin plate smoothing. Plotting smoothed trends:
-
-```{r fig-gam_titer, include=FALSE, eval=FALSE}
-models |> 
-  filter(code == "tp") |> 
-  pull(model) |> 
-  first() |>
-  predict2() |> 
-  plot_pred()
-abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
-```
-
 
 
 ## TO DO

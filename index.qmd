@@ -171,12 +171,11 @@ Tuning of the `grep()` function:
 grep2 <- function(pattern, x, ...) grep(x, pattern, value = TRUE, invert = TRUE, ...)
 ```
 
-A tuning of the `mgcv::gam()` function:
+Some tunings of the `mgcv::gam()` function:
 
 ```{r}
-gam2 <- function(formula, data, ...) {
-  mgcv::gam(formula, data, family = binomial, method = "REML", ...)
-}
+gam2 <- function(...) mgcv::gam(..., method = "REML")
+gam3 <- function(formula, data, ...) gam2(formula, data, family = binomial, ...)
 ```
 
 A function that retrieves the REML from a GAM model:
@@ -242,6 +241,12 @@ binom_test2 <- function(x, n, ...) {
   if (n < 1) return(list(estimate = NA, conf.int = rep(NA, 2)))
   binom.test(x, n, ...)
 }
+```
+
+A tuning of the `predict()` function:
+
+```{r}
+predict2 <- function(...) mgcv::predict.gam(..., type = "response")
 ```
 
 
@@ -620,7 +625,8 @@ all the age classes (on the $x$ axis):
 
 ```{r}
 image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n = 512,
-                                    min_titer = NULL, max_titer = NULL, buff = TRUE) {
+                                    ncol = n, min_titer = NULL, max_titer = NULL,
+                                    buff = TRUE) {
   if (is.null(min_titer)) min_titer <- min(data$titer)
   if (is.null(max_titer)) max_titer <- max(data$titer)
 
@@ -640,7 +646,7 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n 
     t() |>
     image(1:70 - .5, seq(min_titer, max_titer, le = n), z = _, axes = FALSE,
           xlab = xlab, ylab = "titer (IU/L)",
-          col = hcl.colors(n, "YlOrRd", rev = TRUE))
+          col = hcl.colors(ncol, "YlOrRd", rev = TRUE))
   
   if (xaxis) axis(1)
   logaxis(2)
@@ -697,13 +703,21 @@ prepare_data <- function(df, th) {
 }
 ```
 
+A tuning of the `plot()` function:
+
+```{r}
+plotn <- function(...) {
+  plot(..., type = "n", xaxs = "i", yaxs = "i", ylab = "sero-prevalence")
+}
+```
+
 This function plots the output of `prepare_data()`:
 
 ```{r}
 make_p_age_profile <- function(xs = c(.5:19.5, seq(22.5, 67.5, 5), 75)) {
   function(x, main = NULL) {
-    plot(xs, rep(.5, length(xs)), ylim = 0:1, type = "n", xaxs = "i", yaxs = "i",
-         xlim = c(0, 80), xlab = "age classe (years)", ylab = "sero-prevalence")
+    plotn(xs, rep(.5, length(xs)), ylim = 0:1, xlim = c(0, 80),
+          xlab = "age classe (years)")
     abline2(v = seq(0, 70, 5))
     abline2(h = seq(0, 1, .1))
     with(x, {
@@ -792,14 +806,13 @@ par(opar)
 
 #### Functions
 
-A tuning of the `predict()` function:
+A tuning of the `predict2()` function:
 
 ```{r}
-predict2 <- function(model, x = seq(0, 70, le = 512)) {
+predict3 <- function(model, x = seq(0, 70, le = 512), ci = .95) {
   bind_cols(tibble(x  = x),
             model |> 
-              predict(list(age = x), se.fit = .95) |> 
-              map(model$family$linkinv) |> 
+              predict2(list(age = x), se.fit = ci) |> 
               as_tibble())
 }
 ```
@@ -815,14 +828,13 @@ add_ribbon <- function(pred, col = 4) {
 }
 ```
 
-where `pred` is an output of the `predict2()` function and a 4-column data frame with
+where `pred` is an output of the `predict3()` function and a 4-column data frame with
 names `x`, `fit`, `ll` and `ul`. This function plots the predictions of a GAM model:
 
 ```{r}
 plot_pred <- function(pred, ylim = NULL, col = 4, ...) {
   if (is.null(ylim)) ylim <- 0:1
-  with(pred, plot(x, fit, type = "n", ylim = ylim, xaxs = "i", yaxs = "i",
-                  ylab = "sero-prevalence", xlab = "age (years)", ...))
+  with(pred, plotn(x, fit, ylim = ylim, xlab = "age (years)", ...))
   abline2(v = c(.75, 1.5, seq(5, 65, 10)))
   abline3(v = seq(10, 60, 10))
   add_ribbon(pred, col)
@@ -830,20 +842,17 @@ plot_pred <- function(pred, ylim = NULL, col = 4, ...) {
 }
 ```
 
-where `pred` is an output of the `predict2()` function. A wrapper around the
-`predict2()`, `plot_pred()` and `add_ribbon()` functions:
+where `pred` is an output of the `predict3()` function. A wrapper around the
+`predict3()`, `plot_pred()` and `add_ribbon()` functions:
 
 ```{r}
 plot_seroprevalences <- function(data, bs = "tp", k = 50, th1 = 200, th2 = 150) {
-  data <- mutate(data, positive1 = titer > th1,
-                       positive2 = titer > th2)  
-    
-  gam2(positive1 ~ s(age, bs = bs, k = k), data) |> 
-    predict2() |> 
+  gam3((titer > th1) ~ s(age, bs = bs, k = k), data) |> 
+    predict3() |> 
     plot_pred(col = 3)
   
-  gam2(positive2 ~ s(age, bs = bs, k = k), data) |> 
-    predict2() |> 
+  gam3((titer > th2) ~ s(age, bs = bs, k = k), data) |> 
+    predict3() |> 
     add_ribbon(2)
   
   abline3(h = 1:9 / 10)
@@ -862,7 +871,7 @@ compare_bs <- function(data, th = 200, k = 50, n = 1000) {
                         "cubic regression", "cyclic cubic", "B-spline", "P-spline",
                         "cyclic P-spline", "Gaussian process"),
     code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-    mutate(model   = map(code, ~ gam2((titer > th) ~ s(age, bs = .x, k = k), data)),
+    mutate(model   = map(code, ~ gam3((titer > th) ~ s(age, bs = .x, k = k), data)),
            REML    = map_dbl(model, get_reml),
            per_dev = map_dbl(model, dev_explained),
            AIC     = map_dbl(model, AIC),
@@ -900,31 +909,104 @@ models |>
   filter(code == "tp") |> 
   pull(model) |> 
   first() |>
-  predict2() |>
+  predict3() |>
   plot_pred()
 abline3(h = 1:9 / 10)
 ```
+
+With the two thresholds together:
 
 ```{r fig-gam_seroprev2}
 plot_seroprevalences(dataset)
 ```
 
-
-## TO DO
-
-* model density() in 2D in order to see density of data points not only as a function 
-of age but also as a function of titers
+And together with the distributions of titers as a function of age:
 
 ```{r fig-titers_seroprevalences, fig.height = 2 * eps * figh}
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
 dataset |> 
   mutate(across(titer, log10)) |> 
-  image_titer_density_age(xaxis = FALSE, xlab = NA, min_titer = log10(5))
+  image_titer_density_age(xaxis = FALSE, xlab = NA)
 add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
 plot_seroprevalences(dataset)
 par(opar)
 ```
+
+```{r fig.height = 2 * eps * figh}
+opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
+dataset |> 
+  mutate(across(titer, log10)) |> 
+  image_titer_density_age(xaxis = FALSE, xlab = NA, ncol = 12)
+add_years_on_top()
+par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
+plot_seroprevalences(dataset)
+par(opar)
+```
+
+
+## TO DO
+
+* do the image function but with considering quantiles instead (i.e. multimodal one)
+
+* run the gam2 model only on the range of age where we have (enough) data
+
+```{r}
+subset_vector <- function(x, th) x[x > th]
+```
+
+```{r}
+smoother <- function(df, bs = "tp", k = -1) {
+  c("p", "l", "u") |> 
+    setNames(c("fit", "ll", "ul")) |> 
+    map(~ gam2(reformulate(paste0('s(age, bs="', bs, '", k=', k, ")"), .x), betar, df))
+}
+```
+
+```{r}
+gam_predictions <- function(data, th = 200, n = 512, bs = "tp", k = -1) {
+  data <- data |> 
+    mutate(tmp = age_group |> str_remove("\\[") |> str_remove("\\)")) |> 
+    separate(tmp, c("l", "u")) |> 
+    mutate(across(c(l, u), as.integer))
+  
+  ndata <- data |> 
+    select(l, u) |> 
+    range() |> 
+    c(n) |> 
+    setNames(c("from", "to", "length")) |> 
+    as.list() |> 
+    do.call(seq, args = _)
+  
+  data |> 
+    group_by(age_group) |> 
+    summarise(age = mean(age)) |> 
+    left_join(na.exclude(prepare_data(data, th)), "age_group") |> 
+    smoother(bs, k) |> 
+    map(predict2, newdata = list(age = ndata)) |> 
+    as_tibble() |> 
+    bind_cols(tibble(x = ndata)) |> 
+    relocate(x, .before = 1)
+}
+```
+
+```{r}
+gam_predictions(dataset)
+```
+
+```{r}
+dataset |> 
+  filter(province == "An Giang", time_point == "T1") |> 
+  filter_out(age < 14 | age > 70) |>
+  gam_predictions() |> 
+  plot_pred()
+```
+
+
+* Model probability of seropositivity between the two thresholds
+
+* model density() in 2D in order to see density of data points not only as a function 
+of age but also as a function of titers
 
 * doing clustering on the ANCOVA
 
@@ -932,14 +1014,14 @@ par(opar)
 seroprevT1T2 <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
   x |> 
     filter(time_point == "T1") |> 
-    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
-    predict2() |> 
+    gam3((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
+    predict3() |> 
     plot_pred(col = 2)
   
   x |> 
     filter(time_point == "T2") |>
-    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
-    predict2() |> 
+    gam3((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
+    predict3() |> 
     add_ribbon(3)
   
   if (title) x |> 
@@ -954,8 +1036,8 @@ seroprev3timepoints <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
   seroprevT1T2(x, th, bs, k, title)
   x |> 
     filter(time_point == "T3") |>
-    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
-    predict2() |> 
+    gam3((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
+    predict3() |> 
     add_ribbon(4)  
 }
 ```

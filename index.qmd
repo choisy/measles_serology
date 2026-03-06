@@ -174,7 +174,9 @@ grep2 <- function(pattern, x, ...) grep(x, pattern, value = TRUE, invert = TRUE,
 A tuning of the `mgcv::gam()` function:
 
 ```{r}
-gam2 <- function(...) mgcv::gam(..., method = "REML")
+gam2 <- function(formula, data, ...) {
+  mgcv::gam(formula, data, family = binomial, method = "REML", ...)
+}
 ```
 
 A function that retrieves the REML from a GAM model:
@@ -582,12 +584,13 @@ dataset |>
 The distributions of all the titers across the 10 sites for each time point separately:
 
 ```{r fig-distribution_titers_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
+timepoints <- c(paste("Dec", c(2019, 2022)), "Apr 2024")
+
 opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
   group_split() |> 
-  walk2(c(paste("Dec", c(2019, 2022)), "Apr 2024"),
-        ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, .8)))
+  walk2(timepoints, ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, .8)))
 par(opar)
 ```
 
@@ -603,6 +606,14 @@ dataset |>
 
 
 ### Age profile
+
+A function that adds the thresholds values to a plot:
+
+```{r}
+add_thresholds <- function(ths = c(150, 200), col = 2:3) {
+  abline(h = log10(ths), col = col, lty = 2, lwd = 2)
+}
+```
 
 A function that plots an image of the distribution of titers (along the $y$ axis) for
 all the age classes (on the $x$ axis):
@@ -633,9 +644,7 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n 
   
   if (xaxis) axis(1)
   logaxis(2)
-
-  abline(h = log10(c(150, 200)), col = 2:3, lty = 2, lwd = 2)
-  
+  add_thresholds()
   box(bty = "o")
 }
 ```
@@ -659,6 +668,7 @@ dataset |>
             xlab = NA, ylab = "titer (IU/L)", xaxs = "i", xpd = TRUE))
 logaxis(2); box(bty = "o")
 add_years_on_top()
+add_thresholds()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
 dataset |>
   mutate(across(titer, log10)) |> 
@@ -668,146 +678,6 @@ par(opar)
 
 
 ## Sero-prevalence
-
-This function takes a data frame `x` as input that contains at least 2 columns named
-`conclusion` and `n` that are character and numeric values respectively. The
-`conclusion` column as one of its values equal to `Pos`. The output of the function is
-a named vector of 3 values being the estimate of the proportion of `Pos` and the lower
-and upper bounds of the 95% confidence interval of this estimate.
-
-```{r}
-estimate_prop <- function(x) {
-  slot_names <- c("p", "l", "u")
-  x <- with(x, setNames(n, conclusion))
-  n <- sum(x)
-  if (n < 1) return(setNames(rep(NA, 3), slot_names))
-  binom.test(x["Pos"], n) |> 
-    extract(c("estimate", "conf.int")) |> 
-    unlist() |> 
-    setNames(slot_names)
-}
-```
-
-This function takes a data frame that contains at least 2 columns named `age_group`, 
-`conclusion` and as many rows as observations. It returns a data frame with 3 columns
-(proportion estimate and confidence interval bounds) and as many rows as age groups:
-
-```{r}
-make_prepare_data <- function(template = dataset |> 
-                                group_by(age_group, conclusion) |> 
-                                tally() |> 
-                                ungroup() |> 
-                                select(-n)) {
-  function(x) {
-    x |> 
-      group_by(age_group, conclusion) |> 
-      tally() |> 
-      left_join(x = template, y = _, c("age_group", "conclusion")) |> 
-      replace_na(list(n = 0)) |> 
-      group_by(age_group) |> 
-      group_split() |> 
-      map_dfr(estimate_prop)
-  }
-}
-
-prepare_data <- make_prepare_data()
-```
-
-This function takes the ouptut of `prepare_data()` and plots the sero-prevalence per
-age group:
-
-```{r}
-make_p_age_profile <- function(xs = c(.5:19.5, seq(22.5, 67.5, 5), 75)) {
-  function(x) {
-    plot(xs, rep(.5, length(xs)), ylim = 0:1, type = "n", xaxs = "i", yaxs = "i",
-         xlim = c(0, 80), xlab = "age classe (years)", ylab = "sero-prevalence")
-    abline2(v = seq(0, 70, 5))
-    abline2(h = seq(0, 1, .1))
-    with(x, {
-      arrows2(xs, l, xs, u, .02, col = 4)
-      points2(xs, p, col = 4)
-    })
-    box(bty = "o")
-  }
-}
-
-p_age_profile <- make_p_age_profile()
-```
-
-Wrapping up `prepare_data()` and `p_age_profile()`:
-
-```{r}
-plot_age_profile <- function(x) {
-  x |> 
-    prepare_data() |> 
-    p_age_profile()
-}
-```
-
-The age profile of sero-prevalence across the 3 time points and the 10 sites:
-
-```{r fig-age_profile}
-plot_age_profile(dataset)
-```
-
-The age profile of sero-prevalence across the 10 sites and for the 3 time points
-separately:
-
-```{r fig-age_profile_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
-opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
-dataset |> 
-  group_by(time_point) |> 
-  group_walk(~ plot_age_profile(.x))
-par(opar)
-```
-
-`x` is a list of data frames of 3 columns (proportion estimates and confidence interval
-bounds). The number of rows of the data frames is equal to the number age group and the
-number of slot of the list `x` is equal to the number of time points. The following
-function returns a list of data frames of 3 columns too where the number of slots of
-the list and the number of rows of the data frames are switched.
-
-```{r}
-time_change <- function(x) {
-  map(1:nrow(first(x)), function(y) map_dfr(x, ~ .x[y, ]))
-}
-```
-
-This function takes a 3-column (proportion estimate and confidence interval bounds) /
-3-row (for 3 time points) data frame that corresponds to a given age group and plots 
-the change in sero-prevalence as a function of time.
-
-```{r}
-time_trend <- function(x, xs = 1:3, col = 4) {
-  with(x, {
-    plot4(xs, p, xlim = c(0, 4), ylim = 0:1)
-    abline2(h = seq(.2, .8, .2))
-    arrows2(xs, l, xs, u, .05, col = col)
-    points2(xs, p, col = col)
-    box(bty = "o")
-  })
-}
-```
-
-Showing the change in seroprevalence as a function of time for all the age groups
-separately:
-
-```{r fig-seroprevalence_trends, fig.width = 8.4, fig.height = 1.8}
-epsl <- .065
-opar <- par(mfrow = c(3, 10), plt = rep(c(epsl, 1 - epsl), 2))
-dataset |> 
-  filter_out(age_group == last(levels(age_group))) |> 
-  group_by(time_point) |> 
-  group_split() |> 
-  map(prepare_data) |> 
-  map(~ .x[-nrow(.x), ]) |> 
-  time_change() |> 
-  walk(time_trend)
-par(opar)
-```
-
-
-### Take 2
 
 This function takes a data frame that contains at least 2 columns named `age_group` and
 `titer`) and estimates sero-prevalence with confidence interval per `age_group` where
@@ -831,16 +701,17 @@ This function plots the output of `prepare_data()`:
 
 ```{r}
 make_p_age_profile <- function(xs = c(.5:19.5, seq(22.5, 67.5, 5), 75)) {
-  function(x) {
+  function(x, main = NULL) {
     plot(xs, rep(.5, length(xs)), ylim = 0:1, type = "n", xaxs = "i", yaxs = "i",
          xlim = c(0, 80), xlab = "age classe (years)", ylab = "sero-prevalence")
     abline2(v = seq(0, 70, 5))
     abline2(h = seq(0, 1, .1))
     with(x, {
       arrows2(xs, l, xs, u, .02, col = 4)
-      points2(xs, p, col = 4)
+      points2(xs, p, col = 4, xpd = TRUE)
     })
     box(bty = "o")
+    if (! is.null(main)) title(main, line = -9, cex.main = 1)
   }
 }
 
@@ -850,10 +721,10 @@ p_age_profile <- make_p_age_profile()
 A wrapper around the two previous functions:
 
 ```{r}
-plot_age_profile <- function(df, th) {
+plot_age_profile <- function(df, th, main = NULL) {
   df |> 
     prepare_data(th) |> 
-    p_age_profile()
+    p_age_profile(main)
 }
 ```
 
@@ -869,13 +740,13 @@ Sero-prevalence profiles across the 10 sites for each of the time points:
 opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
 dataset |> 
   group_by(time_point) |> 
-  group_walk(~ plot_age_profile(.x, 200))
+  group_split() |> 
+  walk2(timepoints, ~ plot_age_profile(.x, 200, .y))
 par(opar)
 ```
 
-The following
-function returns a list of data frames of 3 columns too where the number of slots of
-the list and the number of rows of the data frames are switched.
+The following function returns a list of data frames of 3 columns too where the number
+of slots of the list and the number of rows of the data frames are switched.
 
 ```{r}
 time_change <- function(x) {
@@ -919,14 +790,6 @@ par(opar)
 
 ### GAM
 
-Augmenting the data:
-
-```{r}
-data2 <- mutate(dataset, log_titer = log10(titer),
-                positive1 = titer > 200,
-                positive2 = titer > 150)
-```
-
 #### Functions
 
 A tuning of the `predict()` function:
@@ -956,24 +819,10 @@ where `pred` is an output of the `predict2()` function and a 4-column data frame
 names `x`, `fit`, `ll` and `ul`. This function plots the predictions of a GAM model:
 
 ```{r}
-plot_pred <- function(pred, ylog = TRUE, ylab = "mean titer (IU/L)", ylim = NULL,
-                      col = 4, ...) {
-  with(pred, {
-    if (is.null(ylim)) ylim <- pred |> 
-        select(-x) |> 
-        range()
-    plot2(x, fit, type = "n", ylim = ylim, xaxs = "i", ylab = ylab,
-          xlab = "age (years)", ...)
-  })
-  if (ylog) {
-    lb1 <- unlist(map(10^(1:5), ~ .x * 1:10))
-    lb2 <- c(150, 200, 300, 500, 700, 1000)
-    axis(2, log10(lb1), NA)
-    axis(2, log10(lb2), lb2)
-  } else {
-    axis(2)
-  }
-  axis(1)
+plot_pred <- function(pred, ylim = NULL, col = 4, ...) {
+  if (is.null(ylim)) ylim <- 0:1
+  with(pred, plot(x, fit, type = "n", ylim = ylim, xaxs = "i", yaxs = "i",
+                  ylab = "sero-prevalence", xlab = "age (years)", ...))
   abline2(v = c(.75, 1.5, seq(5, 65, 10)))
   abline3(v = seq(10, 60, 10))
   add_ribbon(pred, col)
@@ -985,12 +834,15 @@ where `pred` is an output of the `predict2()` function. A wrapper around the
 `predict2()`, `plot_pred()` and `add_ribbon()` functions:
 
 ```{r}
-plot_seroprevalences <- function(data, bs = "tp", k = 50) {
-  gam2(positive1 ~ s(age, bs = bs, k = k), binomial, data) |> 
+plot_seroprevalences <- function(data, bs = "tp", k = 50, th1 = 200, th2 = 150) {
+  data <- mutate(data, positive1 = titer > th1,
+                       positive2 = titer > th2)  
+    
+  gam2(positive1 ~ s(age, bs = bs, k = k), data) |> 
     predict2() |> 
-    plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 3)
+    plot_pred(col = 3)
   
-  gam2(positive2 ~ s(age, bs = bs, k = k), binomial, data) |> 
+  gam2(positive2 ~ s(age, bs = bs, k = k), data) |> 
     predict2() |> 
     add_ribbon(2)
   
@@ -1001,64 +853,60 @@ plot_seroprevalences <- function(data, bs = "tp", k = 50) {
 
 #### Analysis
 
-Let's try 10 smooting basis to see whether one stands out as much better that the
-others:
+A function that runs 10 different smoothing bases on a GAM model and compare them:
 
-```{r eval = FALSE}
-models_prev <- tibble(
-  smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
-                      "cubic regression", "cyclic cubic", "B-spline", "P-spline",
-                      "cyclic P-spline", "Gaussian process"),
-  code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-  mutate(model   = map(code, ~ gam2(positive1 ~ s(age, bs = .x, k = 50),
-                                    binomial, data2)),
-         REML    = map_dbl(model, get_reml),
-         per_dev = map_dbl(model, dev_explained),
-         AIC     = map_dbl(model, AIC),
-         k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
-  unnest_wider(k_check)
-```
-
-```{r include = FALSE}
-if (file_exists("models_prev.rds")) {
-  models_prev <- readRDScache("models_prev.rds")
-} else {
-  models_prev <- tibble(
+```{r}
+compare_bs <- function(data, th = 200, k = 50, n = 1000) {
+  tibble(
     smoothing_basis = c("thin plate", "thin plate", "Duchon", "cubic regression",
                         "cubic regression", "cyclic cubic", "B-spline", "P-spline",
                         "cyclic P-spline", "Gaussian process"),
     code = c("tp", "ts", "ds", "cr", "cs", "cc", "bs", "ps", "cp", "gp")) |> 
-    mutate(model   = map(code, ~ gam2(positive1 ~ s(age, bs = .x, k = 50),
-                                      binomial, data2)),
+    mutate(model   = map(code, ~ gam2((titer > th) ~ s(age, bs = .x, k = k), data)),
            REML    = map_dbl(model, get_reml),
            per_dev = map_dbl(model, dev_explained),
            AIC     = map_dbl(model, AIC),
-           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = 1000)))) |> 
+           k_check = map(model, ~ as_tibble(k.check(.x, n.rep = n)))) |> 
     unnest_wider(k_check)
-  saveRDScache(models_prev, "models_prev.rds")
+}
+```
+
+Let's try 10 smoothing bases to see whether one stands out as much better that the
+others:
+
+```{r eval = FALSE}
+models <- compare_bs(dataset)
+```
+
+```{r include = FALSE}
+if (file_exists("models.rds")) {
+  models <- readRDScache("models.rds")
+} else {
+  models <- compare_bs(dataset)
+  saveRDScache(models, "models.rds")
 }
 ```
 
 which gives:
 
 ```{r}
-select(models_prev, -model)
+select(models, -model)
 ```
 
 Let's then stick to the thin plate smoothing. Plotting smoothed trends:
 
 ```{r fig-gam_seroprev}
-models_prev |> 
+models |> 
   filter(code == "tp") |> 
   pull(model) |> 
   first() |>
   predict2() |>
-  plot_pred(ylog = FALSE, ylab = "prevalence", ylim = 0:1, yaxs = "i")
+  plot_pred()
 abline3(h = 1:9 / 10)
 ```
 
 ```{r fig-gam_seroprev2}
-plot_seroprevalences(data2)
+plot_seroprevalences(dataset)
 ```
 
 
@@ -1067,73 +915,32 @@ plot_seroprevalences(data2)
 * model density() in 2D in order to see density of data points not only as a function 
 of age but also as a function of titers
 
-
 ```{r fig-titers_seroprevalences, fig.height = 2 * eps * figh}
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
-image_titer_density_age(data2, xaxis = FALSE, xlab = NA, min_titer = log10(5))
+dataset |> 
+  mutate(across(titer, log10)) |> 
+  image_titer_density_age(xaxis = FALSE, xlab = NA, min_titer = log10(5))
 add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-plot_seroprevalences(data2)
+plot_seroprevalences(dataset)
 par(opar)
 ```
 
-
-
 * doing clustering on the ANCOVA
 
-```{r fig-T1T2T3}
-data2 |> 
-  filter(time_point == "T1") |> 
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data = _) |> 
-  predict2() |> 
-  plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 2)
-
-data2 |> 
-  filter(time_point == "T2") |>
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data = _) |> 
-  predict2() |> 
-  add_ribbon(3)
-
-data2 |> 
-  filter(time_point == "T3") |>
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data = _) |> 
-  predict2() |> 
-  add_ribbon(4)
-```
-
-```{r fig-T1T2}
-data2 |> 
-  filter(time_point == "T1") |> 
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data = _) |> 
-  predict2() |> 
-  plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 2)
-
-data2 |> 
-  filter(time_point == "T2") |>
-  gam2(positive1 ~ s(age, bs = "tp", k = 50), binomial, data = _) |> 
-  predict2() |> 
-  add_ribbon(3)
-```
-
 ```{r}
-seroprev3timepoints <- function(x, k = 50, title = FALSE) {
+seroprevT1T2 <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
   x |> 
     filter(time_point == "T1") |> 
-    gam2(positive1 ~ s(age, bs = "tp", k = k), binomial, data = _) |> 
+    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
     predict2() |> 
-    plot_pred(ylog = FALSE, ylab = "sero-prevalence", ylim = 0:1, yaxs = "i", col = 2)
+    plot_pred(col = 2)
   
   x |> 
     filter(time_point == "T2") |>
-    gam2(positive1 ~ s(age, bs = "tp", k = k), binomial, data = _) |> 
+    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
     predict2() |> 
     add_ribbon(3)
-  
-  x |> 
-    filter(time_point == "T3") |>
-    gam2(positive1 ~ s(age, bs = "tp", k = k), binomial, data = _) |> 
-    predict2() |> 
-    add_ribbon(4)
   
   if (title) x |> 
     pull(province) |> 
@@ -1142,9 +949,28 @@ seroprev3timepoints <- function(x, k = 50, title = FALSE) {
 }
 ```
 
+```{r}
+seroprev3timepoints <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
+  seroprevT1T2(x, th, bs, k, title)
+  x |> 
+    filter(time_point == "T3") |>
+    gam2((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
+    predict2() |> 
+    add_ribbon(4)  
+}
+```
+
+```{r fig-T1T2T3}
+seroprev3timepoints(dataset)
+```
+
+```{r fig-T1T2}
+seroprevT1T2(dataset)
+```
+
 ```{r fig-seroprev_provinces_3timepoints, fig.width = 8.4, fig.height = 5 * 8.4 / 7}
 opar <- par(mfrow = c(3,3), plt = c(.12, .97, .18, .95))
-data2 |> 
+dataset |> 
   filter_out(province == "Kien Giang") |> 
   group_by(province) |> 
   group_split() |> 
@@ -1162,11 +988,12 @@ dataset |>
 par(opar)
 ```
 
-
 * understanding the age profile of titers and seroprevalence. Maybe as an effect of
 vaccination and waning immunity for vaccination
 
 * Looking at 0-1 and 0-5 in order to see whether we see more detail signal as a
 function of age
+
+* test differences between sexes
 
 

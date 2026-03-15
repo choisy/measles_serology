@@ -84,8 +84,8 @@ saveRDScache <- function(object, file) saveRDS(object, make_path(file))
 Required packages:
 
 ```{r}
-required <- c("sf", "readxl", "stringr", "purrr", "tidyr", "magrittr", "dplyr",
-              "lubridate", "mgcv")
+required <- c("sf", "readxl", "stringr", "stringi", "purrr", "tidyr", "magrittr",
+              "RColorBrewer", "lubridate", "mgcv", "dplyr")
 ```
 
 Installing those that are not installed yet:
@@ -249,6 +249,93 @@ A tuning of the `predict()` function:
 predict2 <- function(...) mgcv::predict.gam(..., type = "response")
 ```
 
+The following function takes a vector `x` of densities of probabilities as an input and
+returns a threshold value above which the values of `x` belong to the `p` confidence
+interval:
+
+```{r}
+ci2th <- function(v, p) {
+  denominator <- sum(v)
+  f <- function(th) sum(v[v > th]) / denominator
+  optimize(function(y) abs(f(y) - p), range(v))$min
+}
+```
+
+The following function converts a vector `x` of densities of probabilities into a
+vector of quantile belonging where the quantiles are defined by the vector `breaks`:
+
+```{r}
+quantval2quantcat <- function(x, breaks = seq(.95, .05, -.05)) {
+  as.numeric(cut(x, c(0, map_dbl(breaks, ci2th, v = x), max(x))))
+}
+```
+
+A function that extracts the last `x` characters of a character string `x`:
+
+```{r}
+lastx <- function(v, x) {
+  nb <- nchar(v)
+  substr(v, nb - x + 1, nb)
+}
+```
+
+A function that convert Vietnamese characters into Latin characters:
+
+```{r}
+convert <- function(x) stringi::stri_trans_general(x, "Latin-ASCII")
+```
+
+A function that convert the names of a data frame into Latin ASCII:
+
+```{r}
+latin_var_names <- function(df) {
+  names(df) <- convert(names(df))
+  df
+}
+```
+
+A function that converts a date from number of days in character string into an R date
+object, using Excel's origin of time:
+
+```{r}
+convert_date <- function(x) x |> as.numeric() |> as_date("1899-12-30")
+```
+
+A tuning of the `readxl::read_excel()` function:
+
+```{r}
+read_excel2 <- function(...) readxl::read_excel(..., col_types = "text")
+```
+
+Tunings of the `min()` and `max()` functions:
+
+```{r}
+min2 <- function(...) min(..., na.rm = TRUE)
+max2 <- function(...) max(..., na.rm = TRUE)
+```
+
+A tuning of the `lubridate::as_date` function:
+
+```{r}
+as_date2 <- function(...) lubridate::as_date(..., origin = "1970-01-01")
+```
+
+A function that replaces all the `NA` of a data frame by 0:
+
+```{r}
+replace_na2 <- function(x) mutate(x, across(everything(), ~ replace_na(.x, 0)))
+```
+
+A function that plots an `sf` object using one of its columns to define the colors:
+
+```{r}
+plot_sf2 <- function(sf, col) {
+  sf |> 
+    st_geometry() |> 
+    plot(col = sf[[col]])
+}
+```
+
 
 ## Data
 
@@ -265,6 +352,8 @@ recode_sex <- function(x) {
 }
 ```
 
+**TO DO:** maybe simply use a hash table after conversion as done for the South.
+
 A piece of code common to all the sample collections:
 
 ```{r}
@@ -277,7 +366,16 @@ common_data_processing <- function(x) {
 }
 ```
 
+A function that generates age groups from age:
+
+```{r}
+make_age_group <- function(x) cut(x, c(0:20, seq(25, 70, 5), 100), right = FALSE)
+```
+
+
 ### Data
+
+#### South
 
 Loading all the excel files of the data folder:
 
@@ -286,8 +384,9 @@ the3files <- path2data |>
   list.files(full.names = TRUE) |> 
   grep2("gadm") |> 
   grep2("cache") |> 
+  grep2("north") |> 
   set_names2() |> 
-  map(read_excel, "Marc", col_types = "text")
+  map(read_excel2, "Marc")
 ```
 
 The first collection:
@@ -343,7 +442,7 @@ dataset <- the3files |>
                                            ifelse(age_unit == "ng", age2 / 365, age2)),
                        age3),
          age = ifelse(age4 > 100, year - age4, age4),
-         age_group = cut(age, c(0:20, seq(25, 70, 5), 100), right = FALSE),
+         age_group = make_age_group(age),
          across(conclusion, ~ ifelse(.x == "pós", "Pos", .x))) |> 
   select(-c(year, age_unit, age2, age3, age4, hospital)) |> 
   arrange(time_point, province, age_group, collection_date)
@@ -372,76 +471,207 @@ Which gives:
 dataset
 ```
 
+
+#### North
+
+Hash table for conclusion:
+
+```{r}
+hash <- c("Am tinh"    = "Neg",
+          "Duong tinh" = "Pos",
+          "Nghi ngo"   = "Equi",
+          "Equi"       = "Equi",
+          "Pos"        = "Pos",
+          "Neg"        = "Neg",
+          "pós"        = "Pos")
+```
+
+Hash table for the variable names of the northern part of the country:
+
+```{r}
+translation <- c("Benh vien"     = "hospital",  
+                 "Ten benh vien" = "province",
+                 "Lab ID"        = "Lab ID",
+                 "Ma benh vien"  = "site",
+                 "Dot lay mau"   = "collection",
+                 "Ma benh pham"  = "participant",
+                 "Study ID"      = "sample_ID",
+                 "Ten viet tat"  = "initials",
+                 "Do tuoi"       = "age",
+                 "Gioi tinh"     = "sex",
+                 "Khoa"          = "ward",
+                 "Ngay nhan mau" = "reception_date",
+                 "Ngay thu mau"  = "collection_date",
+                 "Note"          = "Note",
+                 "Ghi chu"       = "Note2")
+```
+
+Hash table for the `sex` variable:
+
+```{r}
+hash_sex <- rep(c("female", "male"), each = 3) |> 
+  setNames(c("f", "F", "Nu", "M", "N", "Nam"))
+```
+
+A function that translates the names of the variable of a data frame from Vietnamese to
+English using the `translation` hash table:
+
+```{r}
+convert_var_names <- function(df) {
+  names(df) <- translation[names(df)]
+  df
+}
+```
+
+Putting the titers data into shape:
+
+```{r}
+titers <- map(c("IgG Serion 2025 Measles 3021 mau.xls",
+                "IgG Serion 2025 Measles 663 mau.xls"),
+              ~ read_excel(paste0(path2data, "north/titers/", .x))) |> 
+  bind_rows() |> 
+  latin_var_names() |> 
+  select(-STT, -`ID mau`) |> 
+  rename(titer      = `Nong do khang the`,
+         conclusion = `Ket qua`) |> 
+  mutate(across(conclusion, ~ hash[convert(.x)])) |> 
+  unique()
+```
+
+Generating the data set for the northern part of the country:
+
+```{r warning = FALSE}
+dataset_north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
+                   "02FL Tracking sample round 7 to 9.xlsx") |> 
+  rep(2:1) |> 
+  map2(c(1, 2, 1), ~ read_excel2(paste0(path2data, "north/metadata/", .x), .y)) |> 
+  bind_rows() |> 
+  latin_var_names() |> 
+  convert_var_names() |> 
+  mutate(across(province, convert),
+         across(province, ~ .x |>
+                  str_replace("Viet Tiep" , "Hai Phong") |> 
+                  str_replace("Thanh Nhan", "Ha Noi")),
+         across(collection_date, convert_date),
+         across(reception_date, ~ as_date2(ifelse(.x == "30/10/2020", ymd(20201030),
+                                                  convert_date(.x)))),
+         sex       = hash_sex[sex],
+         unit      = convert(str_remove_all(age, "\\d")),
+         age       = as.numeric(str_remove_all(age, "\\D")),
+         age       = ifelse(unit == "ngay", age / 365,
+                            ifelse(unit == "thang", age / 12, age)),
+         age_group = make_age_group(age)) |> 
+  left_join(titers, y = _, "Lab ID") |> 
+  rename(lab_ID = `Lab ID`) |> 
+  select(participant, province, site, collection, sample_ID, age_group, age, sex,
+         collection_date, reception_date, lab_ID, titer, conclusion) |> 
+  mutate(time_point = ifelse(collection == "01", "T1", "T2"))
+```
+
+Check:
+
+```{r}
+map_int(dataset_north, ~ .x |> is.na() |> sum())
+```
+
+```{r}
+dataset_north |> 
+  group_by(collection) |> 
+  summarize(from_recep      = min2(reception_date),
+            to_recep        = max2(reception_date),
+            n               = n(),
+            NA_coll         = sum(is.na(collection_date)))
+```
+
+```{r}
+dataset_north |> 
+  group_by(reception_date) |> 
+  tally() |> 
+  with(plot(reception_date, n, type = "h", col = "4", xlab = NA,
+            ylab = "sampling intensity (nb samples/day)"))
+```
+
+```{r}
+filter(dataset_north, reception_date < collection_date)
+```
+
+#### All
+
+```{r}
+dataset_all <- dataset_north |> 
+  mutate(collection_date = as_date(ifelse(is.na(collection_date),
+                                          reception_date, collection_date))) |> 
+  select(-reception_date, -lab_ID) |> 
+  bind_rows(select(dataset, -plate)) |> 
+  filter_out(is.na(age_group))
+```
+
 Checking the thresholds:
 
 ```{r}
-dataset |> 
+dataset_all |> 
   filter(conclusion == "Neg") |> 
   pull(titer) |> 
   max()
 
-dataset |> 
+dataset_all |> 
   filter(conclusion == "Equi") |> 
   pull(titer) |> 
   range()
 
-dataset |> 
+dataset_all |> 
   filter(conclusion == "Pos") |> 
   pull(titer) |> 
   min()
 ```
 
+Number of samples per site per time point:
+
+```{r}
+(nb_samples <- dataset_all |> 
+  group_by(province, time_point) |> 
+  tally() |> 
+  ungroup() |> 
+  pivot_wider(names_from = time_point, values_from = n) |> 
+  replace_na2())
+```
+
+```{r echo = FALSE}
+saveRDScache(nb_samples, "nb_samples_prov_timepoint.rds")
+```
 
 ## Sampling locations
 
 Loading the `sf` object of the provinces of Vietnam:
 
 ```{r message = FALSE}
+col_map <- c(brewer.pal(3, "Set1"), "lightyellow")
+
 gadm1 <- readRDS(paste0(path2data, "gadm36_VNM_1_sf.rds"))
 st_crs(gadm1) <- st_crs(gadm1)
+
+gadm1 <- gadm1 |> 
+  rename(province = VARNAME_1) |> 
+  select(province, geometry) |> 
+  mutate(across(province, ~ .x |>
+                  str_replace("Thua Thien Hue", "Hue") |>
+                  str_replace("Ho Chi Minh", "HCMC")),
+         centroid = geometry |> st_centroid() |> st_coordinates()) |> 
+  left_join(nb_samples, "province") |> 
+  replace_na2() |> 
+  mutate(col = col_map[(T1 < 1) + (T2 < 1) + (T3 < 1) + 1])
 ```
 
 Plotting the provinces from which samples where collected:
 
 ```{r fig-map, fig.width = .7 * 7, fig.height = 6}
-sel <- dataset |>
-  pull(province) |> 
-  unique() |> 
-  str_replace("Hue", "Thua Thien Hue") |> 
-  str_replace("HCMC", "Ho Chi Minh")
-
 opar <- par(plt = rep(0:1, 2))
-
-gadm1 |> 
-  st_geometry() |> 
-  plot(col = "lightyellow")
-
-gadm1 |> 
-  filter(VARNAME_1 %in% setdiff(sel, "Kien Giang")) |> 
-  st_geometry() |> 
-  plot(add = TRUE, col = 2)
-
-gadm1 |> 
-  filter(VARNAME_1 == "Kien Giang") |> 
-  st_geometry() |> 
-  plot(add = TRUE, col = 7)
-
+plot_sf2(gadm1, "col")
 par(opar)
 ```
 
 
 ## Samples metadata
-
-Number of samples per site per time point:
-
-```{r eval = FALSE}
-with(dataset, table(province, time_point))
-```
-
-```{r echo = FALSE}
-(tmp <- with(dataset, table(province, time_point)))
-saveRDScache(tmp, "nb_samples_prov_timepoint.rds")
-```
 
 A tuning of the `barplot()` function:
 
@@ -625,8 +855,8 @@ all the age classes (on the $x$ axis):
 
 ```{r}
 image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n = 512,
-                                    ncol = n, min_titer = NULL, max_titer = NULL,
-                                    buff = TRUE) {
+                                    min_titer = NULL, max_titer = NULL, buff = TRUE,
+                                    breaks = seq(.95, .05, -.05)) {
   if (is.null(min_titer)) min_titer <- min(data$titer)
   if (is.null(max_titer)) max_titer <- max(data$titer)
 
@@ -641,12 +871,13 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n 
     group_by(age_group) |> 
     group_map(~ density(.x$titer, from = min_titer, to = max_titer, n = n)$y) |> 
     rep(c(rep(1, 20), rep(5, 10))) |> # age classes
+    map(quantval2quantcat, breaks) |> # this computes the categorical HDI
     as.data.frame() |> 
     as.matrix() |> 
     t() |>
     image(1:70 - .5, seq(min_titer, max_titer, le = n), z = _, axes = FALSE,
           xlab = xlab, ylab = "titer (IU/L)",
-          col = hcl.colors(ncol, "YlOrRd", rev = TRUE))
+          col = hcl.colors(length(breaks), "YlOrRd", rev = TRUE))
   
   if (xaxis) axis(1)
   logaxis(2)
@@ -933,21 +1164,10 @@ plot_seroprevalences(dataset)
 par(opar)
 ```
 
-```{r fig.height = 2 * eps * figh}
-opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
-dataset |> 
-  mutate(across(titer, log10)) |> 
-  image_titer_density_age(xaxis = FALSE, xlab = NA, ncol = 12)
-add_years_on_top()
-par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-plot_seroprevalences(dataset)
-par(opar)
-```
-
 
 ## TO DO
 
-* do the image function but with considering quantiles instead (i.e. multimodal one)
+
 
 * run the gam2 model only on the range of age where we have (enough) data
 
@@ -1002,8 +1222,52 @@ dataset |>
   plot_pred()
 ```
 
+###
 
 * Model probability of seropositivity between the two thresholds
+
+```{r}
+titer2protection <- function(x) {
+  ifelse(x < 150, 0, ifelse(x > 200, 1, (x - 150) / 50))
+}
+```
+
+```{r}
+dataset |> 
+  mutate(titer2 = titer2protection(titer)) |> 
+  pull(titer2) |> 
+  mean()
+```
+
+```{r}
+?dbeta
+```
+
+```{r}
+library(MASS)
+```
+
+
+```{r}
+th <- 150
+#prepare_data <- function(df, th) {
+  dataset |> 
+    with(table(age_group, titer > th)) |> 
+    as.data.frame() |> 
+    pivot_wider(names_from = Var2, values_from = Freq) |> 
+    mutate(tmp = map2(`TRUE`, `TRUE` + `FALSE`, binom_test2) |> 
+             map(extract, c("estimate", "conf.int")) |>
+             map(unlist) |> 
+             map(setNames, c("p", "l", "u"))) |> 
+    unnest_wider(tmp)
+#}
+```
+
+```{r}
+dataset |> 
+  filter()
+```
+
 
 * model density() in 2D in order to see density of data points not only as a function 
 of age but also as a function of titers

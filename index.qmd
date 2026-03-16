@@ -391,7 +391,7 @@ first_collection <- the3files$DEC2019 |>
 Combining the collections:
 
 ```{r warning = FALSE}
-dataset <- the3files |> 
+south <- the3files |> 
   extract(c("Dec2022", "Apr24")) |> 
   map(select, -date_collection) |> 
   bind_rows() |> 
@@ -436,7 +436,7 @@ dataset <- the3files |>
 A hash table to generate site ID from province names:
 
 ```{r}
-hash <- dataset |> 
+hash <- south |> 
   filter_out(time_point == "T1") |> 
   filter(age > 20) |> 
   select(province, site) |> 
@@ -447,13 +447,13 @@ hash <- dataset |>
 Completing the site ID when missing:
 
 ```{r}
-dataset <- mutate(dataset, across(site, ~ ifelse(is.na(.x), hash[province], .x)))
+south <- mutate(south, across(site, ~ ifelse(is.na(.x), hash[province], .x)))
 ```
 
 Which gives:
 
 ```{r}
-dataset
+south
 ```
 
 
@@ -588,7 +588,7 @@ dataset_all <- dataset_north |>
   mutate(collection_date = as_date(ifelse(is.na(collection_date),
                                           reception_date, collection_date))) |> 
   select(-reception_date, -lab_ID) |> 
-  bind_rows(select(dataset, -plate)) |> 
+  bind_rows(select(south, -plate)) |> 
   filter_out(is.na(age_group))
 ```
 
@@ -677,7 +677,7 @@ barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...)
 Number of sample per age class, per province, per time point:
 
 ```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 50 / 3}
-tmp <- dataset |> 
+tmp <- south |> 
   with(table(age_group, province, time_point)) |>
   as.data.frame()
 
@@ -700,7 +700,7 @@ hz_lines <- 1:10
 
 opar <- par(plt = c(.105, .97, .1, .9))
 
-dataset |> 
+south |> 
   group_by(province, collection_date) |> 
   tally() |> 
   ungroup() |> 
@@ -710,7 +710,7 @@ dataset |>
 lb <- 2020:2024
 axis(1, ymd(paste(lb, "0101")), lb)
 abline3(h = hz_lines)
-text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$province))
+text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(south$province))
 
 par(opar)
 ```
@@ -757,11 +757,11 @@ colSums(tmp)
 An alternative representation:
 
 ```{r fig-cum_nb_sample}
-plot2(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), xlab = NA,
+plot2(NA, xlim = range(south$collection_date), ylim = c(0, 600), xlab = NA,
       ylab = "cumulative number of samples")
 axis(1, ymd(paste(lb, "0101")), lb); axis(2)
 
-dataset |> 
+south |> 
   group_by(province, collection_date) |> 
   tally() |> 
   group_modify(~ mutate(.x, cumn = cumsum(n))) |> 
@@ -771,7 +771,7 @@ dataset |>
 Yet another representation:
 
 ```{r include=FALSE, eval=FALSE}
-dataset |> 
+south |> 
   group_by(collection_date) |> 
   tally() |> 
   with(plot(collection_date, n, type = "h", col = "4", xlab = NA,
@@ -790,7 +790,7 @@ Gender distribution:
 
 ```{r fig-sex_distribution, fig.width = .7 * 7, fig.height = .7 * 50 / 3}
 opar <- par(mfcol = c(10, 3), plt = c(.05, .95, .01, .91))
-dataset |> 
+south |> 
   with(table(sex, province, time_point)) |> 
   as.data.frame() |> 
   group_by(time_point, province) |> 
@@ -841,14 +841,14 @@ plot_titers <- function(df, main = NULL, ...) {
 Plotting the distribution of all the titers, across the 3 time points and the 10 sites:
 
 ```{r fig-distribution_titers}
-plot_titers(dataset)
+plot_titers(south)
 ```
 
 The corresponding proportions in each of the 3 categories of titer values are the
 following:
 
 ```{r}
-dataset |> 
+south |> 
   group_by(conclusion) |> 
   tally2()
 ```
@@ -859,7 +859,7 @@ The distributions of all the titers across the 10 sites for each time point sepa
 timepoints <- c(paste("Dec", c(2019, 2022)), "Apr 2024")
 
 opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
-dataset |> 
+south |> 
   group_by(time_point) |> 
   group_split() |> 
   walk2(timepoints, ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, .8)))
@@ -870,7 +870,7 @@ The corresponding proportions in each of the 3 categories of titer values and fo
 time point are the following:
 
 ```{r}
-dataset |> 
+south |> 
   group_by(time_point, conclusion) |> 
   tally2() |> 
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)
@@ -936,7 +936,7 @@ Let's plot the distributions of the titers as a function of age:
 
 ```{r fig-titer_density_age, fig.height = 2 * eps * figh}
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
-dataset |> 
+south |> 
   filter_out(age_group == "[70,100)") |> 
   with(plot(age, log10(titer), col = adjustcolor(4, .2), xlim = c(0, 70), axes = FALSE,
             xlab = NA, ylab = "titer (IU/L)", xaxs = "i", xpd = TRUE))
@@ -944,7 +944,7 @@ logaxis(2); box(bty = "o")
 add_years_on_top()
 add_thresholds()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-dataset |>
+south |>
   mutate(across(titer, log10)) |> 
   image_titer_density_age()
 par(opar)
@@ -1013,14 +1013,14 @@ plot_age_profile <- function(df, th, main = NULL) {
 Sero-prevalence profile across the 3 time points and the 10 sites:
 
 ```{r}
-plot_age_profile(dataset, 200)
+plot_age_profile(south, 200)
 ```
 
 Sero-prevalence profiles across the 10 sites for each of the time points:
 
 ```{r fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
 opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
-dataset |> 
+south |> 
   group_by(time_point) |> 
   group_split() |> 
   walk2(timepoints, ~ plot_age_profile(.x, 200, .y))
@@ -1058,7 +1058,7 @@ separately:
 ```{r fig.width = 8.4, fig.height = 1.8}
 epsl <- .065
 opar <- par(mfrow = c(3, 10), plt = rep(c(epsl, 1 - epsl), 2))
-dataset |> 
+south |> 
   filter_out(age_group == last(levels(age_group))) |> 
   group_by(time_point) |> 
   group_split() |> 
@@ -1152,14 +1152,14 @@ Let's try 10 smoothing bases to see whether one stands out as much better that t
 others:
 
 ```{r eval = FALSE}
-models <- compare_bs(dataset)
+models <- compare_bs(south)
 ```
 
 ```{r include = FALSE}
 if (file_exists("models.rds")) {
   models <- readRDScache("models.rds")
 } else {
-  models <- compare_bs(dataset)
+  models <- compare_bs(south)
   saveRDScache(models, "models.rds")
 }
 ```
@@ -1185,19 +1185,19 @@ abline3(h = 1:9 / 10)
 With the two thresholds together:
 
 ```{r fig-gam_seroprev2}
-plot_seroprevalences(dataset)
+plot_seroprevalences(south)
 ```
 
 And together with the distributions of titers as a function of age:
 
 ```{r fig-titers_seroprevalences, fig.height = 2 * eps * figh}
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
-dataset |> 
+south |> 
   mutate(across(titer, log10)) |> 
   image_titer_density_age(xaxis = FALSE, xlab = NA)
 add_years_on_top()
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-plot_seroprevalences(dataset)
+plot_seroprevalences(south)
 par(opar)
 ```
 
@@ -1248,11 +1248,11 @@ gam_predictions <- function(data, th = 200, n = 512, bs = "tp", k = -1) {
 ```
 
 ```{r}
-gam_predictions(dataset)
+gam_predictions(south)
 ```
 
 ```{r}
-dataset |> 
+south |> 
   filter(province == "An Giang", time_point == "T1") |> 
   filter_out(age < 14 | age > 70) |>
   gam_predictions() |> 
@@ -1270,7 +1270,7 @@ titer2protection <- function(x) {
 ```
 
 ```{r}
-dataset |> 
+south |> 
   mutate(titer2 = titer2protection(titer)) |> 
   pull(titer2) |> 
   mean()
@@ -1288,7 +1288,7 @@ library(MASS)
 ```{r}
 th <- 150
 #prepare_data <- function(df, th) {
-  dataset |> 
+  south |> 
     with(table(age_group, titer > th)) |> 
     as.data.frame() |> 
     pivot_wider(names_from = Var2, values_from = Freq) |> 
@@ -1301,8 +1301,8 @@ th <- 150
 ```
 
 ```{r}
-dataset |> 
-  filter()
+#south |> 
+#  filter()
 ```
 
 
@@ -1344,16 +1344,16 @@ seroprev3timepoints <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
 ```
 
 ```{r fig-T1T2T3}
-seroprev3timepoints(dataset)
+seroprev3timepoints(south)
 ```
 
 ```{r fig-T1T2}
-seroprevT1T2(dataset)
+seroprevT1T2(south)
 ```
 
 ```{r fig-seroprev_provinces_3timepoints, fig.width = 8.4, fig.height = 5 * 8.4 / 7}
 opar <- par(mfrow = c(3,3), plt = c(.12, .97, .18, .95))
-dataset |> 
+south |> 
   filter_out(province == "Kien Giang") |> 
   group_by(province) |> 
   group_split() |> 
@@ -1363,7 +1363,7 @@ par(opar)
 
 ```{r fig-seroprev_provinces, fig.width = 8.4, fig.height = 5 * 8.4 / 7}
 opar <- par(mfrow = c(3,3), plt = c(.12, .97, .18, .95))
-dataset |> 
+south |> 
   filter_out(province == "Kien Giang") |> 
   group_by(province) |> 
   group_split() |> 

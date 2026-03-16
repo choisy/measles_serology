@@ -330,6 +330,15 @@ plot_sf2 <- function(sf, col) {
 }
 ```
 
+A function that adds the column-wise sum of the numeric variables at the bottom of a
+data frame:
+
+```{r}
+add_colsum <- function(df) {
+  bind_rows(df, map_dfr(df, function(x) ifelse(is.numeric(x), sum(x), NA)))
+}
+```
+
 
 ## Data
 
@@ -491,13 +500,6 @@ hash_translation <- c("Benh vien"     = "hospital",
                       "Ghi chu"       = "Note2")
 ```
 
-Hash table for the `sex` variable:
-
-```{r}
-#hash_sex <- rep(c("female", "male"), each = 3) |> 
-#  setNames(c("f", "F", "Nu", "M", "N", "Nam"))
-```
-
 A function that translates the names of the variable of a data frame from Vietnamese to
 English using the `hash_translation` hash table:
 
@@ -539,8 +541,7 @@ north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
                   str_replace("Thanh Nhan", "Ha Noi")),
          across(collection_date, convert_date),
          across(reception_date, ~ as_date(ifelse(.x == "30/10/2020", ymd(20201030),
-                                                 convert_date(.x)),
-                                          origin = "1970-01-01")),
+                                                 convert_date(.x)))),
          sex       = hash_sex[tolower(sex)],
          unit      = convert(str_remove_all(age, "\\d")),
          age       = as.numeric(str_remove_all(age, "\\D")),
@@ -569,13 +570,7 @@ north |>
             NA_coll         = sum(is.na(collection_date)))
 ```
 
-```{r}
-north |> 
-  group_by(reception_date) |> 
-  tally() |> 
-  with(plot(reception_date, n, type = "h", col = "4", xlab = NA,
-            ylab = "sampling intensity (nb samples/day)"))
-```
+Checking inconsistency between dates of collection and reception:
 
 ```{r}
 filter(north, reception_date < collection_date)
@@ -628,7 +623,7 @@ saveRDScache(nb_samples, "nb_samples_prov_timepoint.rds")
 
 ## Sampling locations
 
-Loading the `sf` object of the provinces of Vietnam:
+Loading the and modifying `sf` object of the provinces of Vietnam:
 
 ```{r message = FALSE}
 col_map <- c(brewer.pal(3, "Set1"), "lightyellow")
@@ -651,6 +646,10 @@ gadm1 <- gadm1 |>
 Plotting the provinces from which samples where collected:
 
 ```{r fig-map, fig.width = .7 * 7, fig.height = 6}
+#| fig-cap: "The provinces of Vietnam from which serum samples are collected for the
+#| first time point only (Dec 2019 in green), the first two time points only (Dec 2019
+#| and Dec 2022 in blue), and for the three time points (Dec 2019, Dec 2022 and Apr
+#| 2024 in red)."
 opar <- par(plt = rep(0:1, 2))
 plot_sf2(gadm1, "col")
 par(opar)
@@ -658,6 +657,83 @@ par(opar)
 
 
 ## Samples metadata
+
+### Sampling intensity
+
+Number of samples per day and site:
+
+```{r fig-nb_sample_day_site, fig.height = 1.2 * eps * figh}
+#| fig-cap: "The number of samples collected as a function of time and space
+#| (proportional to the areas of the circles). The provinces are arranged from bottom
+#| to top according to the latitude of the centroid of their administrative polygon and
+#| the color code is the same as for @fig-map."
+hzl <- 1:20
+
+opar <- par(plt = c(.105, .97, .1, .9))
+
+nb_samples2 <- gadm1 |>
+  st_drop_geometry() |> 
+  mutate(latitude = centroid[, "Y"]) |> 
+  select(province, latitude, col) |> 
+  left_join(nb_samples, y = _, "province") |> 
+  arrange(desc(latitude))
+
+dataset |> 
+  group_by(province, collection_date) |> 
+  tally() |> 
+  ungroup() |> 
+  mutate(y = max(hzl) + 1 - as.numeric(factor(province, nb_samples2$province))) |> 
+  left_join(nb_samples2, "province") |> 
+  slice_sample(prop = 1) |> 
+  with(plot3(collection_date, y, cex = sqrt(n), xpd = TRUE, col = col))
+
+lb <- 2020:2024
+axis(1, ymd(paste(lb, "0101")), lb)
+abline3(h = hzl)
+text2(rep(ymd(20210701), length(hzl)), rev(hzl), nb_samples2$province)
+
+par(opar)
+```
+
+Number of samples:
+
+```{r}
+nb_samples2 |> 
+  select(-c(latitude, col)) |> 
+  mutate(total = T1 + T2 + T3) |> 
+  add_colsum() |> 
+  print(n = Inf)
+```
+
+An alternative representation:
+
+```{r fig-sampling_intensity, fig.width = eps * figw * .865 / .83}
+#| fig-cap: "The sampling intensity (grey, left y-axis) and the cumulative number of
+#| samples as a function of space and time. The the latter, the color code is the same
+#| as for @fig-map."
+opar <- par(plt = c(.0825, .9125, .15, .95))
+dataset |> 
+  group_by(collection_date) |> 
+  tally() |> 
+  with(plot(collection_date, n, type = "h", col = "grey", xlab = NA,
+            ylab = "sampling intensity (nb samples/day)"))
+
+par(new = TRUE)
+
+plot2(NA, xlim = range(dataset$collection_date), ylim = c(0, 600), ann = FALSE)
+axis(4)
+mtext("cumulative number of samples", 4, 1.5)
+
+dataset |> 
+  left_join(select(nb_samples2, province, col), "province") |> 
+  group_by(province, collection_date) |> 
+  summarise(n = n(), col = unique(col), .groups = "drop_last") |> 
+  group_modify(~ mutate(.x, cumn = cumsum(n))) |> 
+  group_walk(~ with(.x, lines(collection_date, cumn, type = "s", col = col)))
+
+par(opar)
+```
+
 
 ### Age distributions
 
@@ -691,102 +767,8 @@ tmp |>
 par(opar)
 ```
 
-### Sampling intensity
 
-Number of samples per day and site:
-
-```{r include=FALSE, eval=FALSE}
-hz_lines <- 1:10
-
-opar <- par(plt = c(.105, .97, .1, .9))
-
-south |> 
-  group_by(province, collection_date) |> 
-  tally() |> 
-  ungroup() |> 
-  mutate(y = max(hz_lines) + 1 - as.numeric(as.factor(province))) |> 
-  with(plot3(collection_date, y, cex = sqrt(n), col = 4, xpd = TRUE))
-
-lb <- 2020:2024
-axis(1, ymd(paste(lb, "0101")), lb)
-abline3(h = hz_lines)
-text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(south$province))
-
-par(opar)
-```
-
-```{r fig-nb_sample_day_site, fig.height = 1.2 * eps * figh}
-hz_lines <- 1:20
-
-opar <- par(plt = c(.105, .97, .1, .9))
-
-nb_samples2 <- gadm1 |>
-  st_drop_geometry() |> 
-  mutate(latitude = centroid[, "Y"]) |> 
-  select(province, latitude, col) |> 
-  left_join(nb_samples, y = _, "province") |> 
-  arrange(desc(latitude))
-
-dataset |> 
-  group_by(province, collection_date) |> 
-  tally() |> 
-  ungroup() |> 
-  mutate(y = max(hz_lines) + 1 - as.numeric(factor(province, nb_samples2$province))) |> 
-  left_join(nb_samples2, "province") |> 
-  slice_sample(prop = 1) |> 
-  with(plot3(collection_date, y, cex = sqrt(n), xpd = TRUE, col = col))
-
-lb <- 2020:2024
-axis(1, ymd(paste(lb, "0101")), lb)
-abline3(h = hz_lines)
-text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), nb_samples2$province)
-
-par(opar)
-```
-
-Number of samples:
-
-```{r}
-(tmp <- nb_samples2 |> 
-  select(T1, T2, T3) |> 
-  mutate(total = T1 + T2 + T3))
-
-colSums(tmp)
-```
-
-An alternative representation:
-
-```{r fig-cum_nb_sample}
-plot2(NA, xlim = range(south$collection_date), ylim = c(0, 600), xlab = NA,
-      ylab = "cumulative number of samples")
-axis(1, ymd(paste(lb, "0101")), lb); axis(2)
-
-south |> 
-  group_by(province, collection_date) |> 
-  tally() |> 
-  group_modify(~ mutate(.x, cumn = cumsum(n))) |> 
-  group_walk(~ with(.x, lines(collection_date, cumn, type = "s", col = 4)))
-```
-
-Yet another representation:
-
-```{r include=FALSE, eval=FALSE}
-south |> 
-  group_by(collection_date) |> 
-  tally() |> 
-  with(plot(collection_date, n, type = "h", col = "4", xlab = NA,
-            ylab = "sampling intensity (nb samples/day)"))
-```
-
-```{r fig-sampling_intensity}
-dataset |> 
-  group_by(collection_date) |> 
-  tally() |> 
-  with(plot(collection_date, n, type = "h", col = "grey", xlab = NA,
-            ylab = "sampling intensity (nb samples/day)"))
-```
-
-Gender distribution:
+### Gender distribution
 
 ```{r fig-sex_distribution, fig.width = .7 * 7, fig.height = .7 * 50 / 3}
 opar <- par(mfcol = c(10, 3), plt = c(.05, .95, .01, .91))

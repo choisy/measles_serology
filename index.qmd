@@ -739,7 +739,7 @@ par(opar)
 
 A tuning of the `barplot()` function:
 
-```{r}
+```{r include=FALSE, eval=FALSE}
 barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...) {
   with(x, {
     barplot(Freq, space = 0, col = col, ...)
@@ -747,6 +747,25 @@ barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...)
   })
   segments2(mn, n1, ad, n1)
   segments2(ad, n2, mx, n2)
+}
+```
+
+```{r}
+plot_blank <- function() plot(1, axes = FALSE, ann = FALSE, type = "n")
+```
+
+```{r}
+barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...) {
+  if (sum(x$Freq) < 1) {
+    plot_blank()
+  } else {
+    with(x, {
+      barplot(Freq, space = 0, col = col, ...)
+      mtext(province[1], line = -.5)
+    })
+    segments2(mn, n1, ad, n1)
+    segments2(ad, n2, mx, n2)
+  }
 }
 ```
 
@@ -767,7 +786,7 @@ tmp |>
 par(opar)
 ```
 
-```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 3}
+```{r include=FALSE, eval=FALSE, fig.width = 7, fig.height = 100 / 3}
 tmp <- dataset |> 
   with(table(age_group, province, time_point)) |>
   as.data.frame()
@@ -779,6 +798,37 @@ tmp |>
   group_by(time_point, province) |> 
   group_split() |> 
   walk(~ barplot2(.x, ylim = ylim))
+par(opar)
+```
+
+```{r}
+barplot_row <- function(x, ylim) {
+  plot_blank()
+  x |> 
+    group_by(time_point) |> 
+    group_split() |> 
+    walk(~ barplot2(.x, ylim = ylim))
+}
+```
+
+```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 4}
+tmp <- dataset |> 
+  with(table(age_group, province, time_point)) |>
+  as.data.frame()
+
+ylim <- c(0, max(tmp$Freq))
+
+opar <- par2(mfcol = c(20, 4), plt = c(.12, .985, .1, .9))
+
+tmp |> 
+  group_by(province) |> 
+  group
+
+#tmp |> 
+#  group_by(time_point, province) |> 
+#  group_split() |> 
+#  walk(~ barplot2(.x, ylim = ylim))
+
 par(opar)
 ```
 

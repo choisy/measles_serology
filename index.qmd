@@ -526,8 +526,8 @@ titers <- map(c("IgG Serion 2025 Measles 3021 mau.xls",
 Generating the data set for the northern part of the country:
 
 ```{r warning = FALSE}
-dataset_north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
-                   "02FL Tracking sample round 7 to 9.xlsx") |> 
+north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
+           "02FL Tracking sample round 7 to 9.xlsx") |> 
   rep(2:1) |> 
   map2(c(1, 2, 1), ~ read_excel2(paste0(path2data, "north/metadata/", .x), .y)) |> 
   bind_rows() |> 
@@ -557,11 +557,11 @@ dataset_north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
 Check:
 
 ```{r}
-map_int(dataset_north, ~ .x |> is.na() |> sum())
+map_int(north, ~ .x |> is.na() |> sum())
 ```
 
 ```{r}
-dataset_north |> 
+north |> 
   group_by(collection) |> 
   summarize(from_recep      = min2(reception_date),
             to_recep        = max2(reception_date),
@@ -570,7 +570,7 @@ dataset_north |>
 ```
 
 ```{r}
-dataset_north |> 
+north |> 
   group_by(reception_date) |> 
   tally() |> 
   with(plot(reception_date, n, type = "h", col = "4", xlab = NA,
@@ -578,13 +578,13 @@ dataset_north |>
 ```
 
 ```{r}
-filter(dataset_north, reception_date < collection_date)
+filter(north, reception_date < collection_date)
 ```
 
 #### All
 
 ```{r}
-dataset_all <- dataset_north |> 
+dataset_all <- north |> 
   mutate(collection_date = as_date(ifelse(is.na(collection_date),
                                           reception_date, collection_date))) |> 
   select(-reception_date, -lab_ID) |> 

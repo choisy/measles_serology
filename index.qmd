@@ -165,12 +165,6 @@ abline2 <- function(...) abline(..., col = "lightgrey")
 abline3 <- function(...) abline(..., col = "grey")
 ```
 
-Tuning of the `grep()` function:
-
-```{r}
-grep2 <- function(pattern, x, ...) grep(x, pattern, value = TRUE, invert = TRUE, ...)
-```
-
 Some tunings of the `mgcv::gam()` function:
 
 ```{r}
@@ -273,10 +267,10 @@ quantval2quantcat <- function(x, breaks = seq(.95, .05, -.05)) {
 A function that extracts the last `x` characters of a character string `x`:
 
 ```{r}
-lastx <- function(v, x) {
-  nb <- nchar(v)
-  substr(v, nb - x + 1, nb)
-}
+#lastx <- function(v, x) {
+#  nb <- nchar(v)
+#  substr(v, nb - x + 1, nb)
+#}
 ```
 
 A function that convert Vietnamese characters into Latin characters:
@@ -294,11 +288,17 @@ latin_var_names <- function(df) {
 }
 ```
 
+A tuning of the `lubridate::as_date` function:
+
+```{r}
+as_date_excel <- function(...) lubridate::as_date(..., origin = "1899-12-30")
+```
+
 A function that converts a date from number of days in character string into an R date
 object, using Excel's origin of time:
 
 ```{r}
-convert_date <- function(x) x |> as.numeric() |> as_date("1899-12-30")
+convert_date <- function(x) x |> as.numeric() |> as_date_excel()
 ```
 
 A tuning of the `readxl::read_excel()` function:
@@ -312,12 +312,6 @@ Tunings of the `min()` and `max()` functions:
 ```{r}
 min2 <- function(...) min(..., na.rm = TRUE)
 max2 <- function(...) max(..., na.rm = TRUE)
-```
-
-A tuning of the `lubridate::as_date` function:
-
-```{r}
-as_date2 <- function(...) lubridate::as_date(..., origin = "1970-01-01")
 ```
 
 A function that replaces all the `NA` of a data frame by 0:
@@ -341,18 +335,12 @@ plot_sf2 <- function(sf, col) {
 
 ### Functions
 
-A function that recodes sex:
+A hash table to recode sex:
 
 ```{r}
-recode_sex <- function(x) {
-  sex_val <- sort(unique(x$sex))
-  males   <- grep("^M|na", sex_val, TRUE, value = TRUE)
-  females <- grep("^M|na", sex_val, TRUE, value = TRUE, invert = TRUE)
-  mutate(x, across(sex, ~ recode_values(.x, males ~ "male", females ~ "female")))
-}
+hash_sex <- setNames(rep(c("female", "male"), c(4, 3)),
+                     c("f", "nu", "nnu", "nuu", "m", "n", "nam"))
 ```
-
-**TO DO:** maybe simply use a hash table after conversion as done for the South.
 
 A piece of code common to all the sample collections:
 
@@ -360,7 +348,7 @@ A piece of code common to all the sample collections:
 common_data_processing <- function(x) {
   x |> 
     filter_out(if_all(everything(), is.na)) |>
-    recode_sex() |>
+    mutate(across(sex, ~ hash_sex[tolower(convert(.x))])) |> 
     separate_wider_delim(ID, regex("\\s+"), names = c("sID", "cdate", "plate")) |>
     mutate(across(titer, as.double))
 }
@@ -380,11 +368,8 @@ make_age_group <- function(x) cut(x, c(0:20, seq(25, 70, 5), 100), right = FALSE
 Loading all the excel files of the data folder:
 
 ```{r}
-the3files <- path2data |> 
+the3files <- paste0(path2data, "south") |> 
   list.files(full.names = TRUE) |> 
-  grep2("gadm") |> 
-  grep2("cache") |> 
-  grep2("north") |> 
   set_names2() |> 
   map(read_excel2, "Marc")
 ```
@@ -396,7 +381,7 @@ first_collection <- the3files$DEC2019 |>
   common_data_processing() |> 
   mutate(date_chr = if_else( grepl("[./]", date_collection), date_collection, NA),
          date_num = if_else(!grepl("[./]", date_collection), date_collection, NA),
-         across(date_num, ~ .x |> as.numeric() |> as_date("1899-12-30")),
+         across(date_num, ~ .x |> as.numeric() |> as_date_excel()),
          across(date_chr, dmy),
          collection_date = coalesce(date_num, date_chr)) |> 
   select(participant, hospital, collection, sample_ID, age_group, age, sex,
@@ -509,8 +494,8 @@ translation <- c("Benh vien"     = "hospital",
 Hash table for the `sex` variable:
 
 ```{r}
-hash_sex <- rep(c("female", "male"), each = 3) |> 
-  setNames(c("f", "F", "Nu", "M", "N", "Nam"))
+#hash_sex <- rep(c("female", "male"), each = 3) |> 
+#  setNames(c("f", "F", "Nu", "M", "N", "Nam"))
 ```
 
 A function that translates the names of the variable of a data frame from Vietnamese to
@@ -553,9 +538,10 @@ dataset_north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
                   str_replace("Viet Tiep" , "Hai Phong") |> 
                   str_replace("Thanh Nhan", "Ha Noi")),
          across(collection_date, convert_date),
-         across(reception_date, ~ as_date2(ifelse(.x == "30/10/2020", ymd(20201030),
-                                                  convert_date(.x)))),
-         sex       = hash_sex[sex],
+         across(reception_date, ~ as_date(ifelse(.x == "30/10/2020", ymd(20201030),
+                                                 convert_date(.x)),
+                                          origin = "1970-01-01")),
+         sex       = hash_sex[tolower(sex)],
          unit      = convert(str_remove_all(age, "\\d")),
          age       = as.numeric(str_remove_all(age, "\\D")),
          age       = ifelse(unit == "ngay", age / 365,

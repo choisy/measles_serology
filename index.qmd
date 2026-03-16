@@ -673,6 +673,8 @@ par(opar)
 
 ## Samples metadata
 
+### Age distributions
+
 A tuning of the `barplot()` function:
 
 ```{r}
@@ -703,9 +705,11 @@ tmp |>
 par(opar)
 ```
 
+### Sampling intensity
+
 Number of samples per day and site:
 
-```{r fig-nb_sample_day_site}
+```{r include=FALSE, eval=FALSE}
 hz_lines <- 1:10
 
 opar <- par(plt = c(.105, .97, .1, .9))
@@ -725,6 +729,45 @@ text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), unique(dataset$provin
 par(opar)
 ```
 
+```{r fig-nb_sample_day_site, fig.height = 1.2 * eps * figh}
+hz_lines <- 1:20
+
+opar <- par(plt = c(.105, .97, .1, .9))
+
+nb_samples2 <- gadm1 |>
+  st_drop_geometry() |> 
+  mutate(latitude = centroid[, "Y"]) |> 
+  select(province, latitude, col) |> 
+  left_join(nb_samples, y = _, "province") |> 
+  arrange(desc(latitude))
+
+dataset_all |> 
+  group_by(province, collection_date) |> 
+  tally() |> 
+  ungroup() |> 
+  mutate(y = max(hz_lines) + 1 - as.numeric(factor(province, nb_samples2$province))) |> 
+  left_join(nb_samples2, "province") |> 
+  slice_sample(prop = 1) |> 
+  with(plot3(collection_date, y, cex = sqrt(n), xpd = TRUE, col = col))
+
+lb <- 2020:2024
+axis(1, ymd(paste(lb, "0101")), lb)
+abline3(h = hz_lines)
+text2(rep(ymd(20210701), length(hz_lines)), rev(hz_lines), nb_samples2$province)
+
+par(opar)
+```
+
+Number of samples:
+
+```{r}
+(tmp <- nb_samples2 |> 
+  select(T1, T2, T3) |> 
+  mutate(total = T1 + T2 + T3))
+
+colSums(tmp)
+```
+
 An alternative representation:
 
 ```{r fig-cum_nb_sample}
@@ -741,11 +784,19 @@ dataset |>
 
 Yet another representation:
 
-```{r fig-sampling_intensity}
+```{r include=FALSE, eval=FALSE}
 dataset |> 
   group_by(collection_date) |> 
   tally() |> 
   with(plot(collection_date, n, type = "h", col = "4", xlab = NA,
+            ylab = "sampling intensity (nb samples/day)"))
+```
+
+```{r fig-sampling_intensity}
+dataset_all |> 
+  group_by(collection_date) |> 
+  tally() |> 
+  with(plot(collection_date, n, type = "h", col = "grey", xlab = NA,
             ylab = "sampling intensity (nb samples/day)"))
 ```
 

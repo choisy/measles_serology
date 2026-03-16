@@ -752,7 +752,7 @@ barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...)
 
 Number of sample per age class, per province, per time point:
 
-```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 50 / 3}
+```{r include=FALSE, eval=FALSE, fig.width = 7, fig.height = 50 / 3}
 tmp <- south |> 
   with(table(age_group, province, time_point)) |>
   as.data.frame()
@@ -760,6 +760,21 @@ tmp <- south |>
 ylim <- c(0, max(tmp$Freq))
 
 opar <- par2(mfcol = c(10, 3), plt = c(.12, .985, .1, .9))
+tmp |> 
+  group_by(time_point, province) |> 
+  group_split() |> 
+  walk(~ barplot2(.x, ylim = ylim))
+par(opar)
+```
+
+```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 3}
+tmp <- dataset |> 
+  with(table(age_group, province, time_point)) |>
+  as.data.frame()
+
+ylim <- c(0, max(tmp$Freq))
+
+opar <- par2(mfcol = c(20, 3), plt = c(.12, .985, .1, .9))
 tmp |> 
   group_by(time_point, province) |> 
   group_split() |> 

@@ -436,7 +436,7 @@ south <- the3files |>
 A hash table to generate site ID from province names:
 
 ```{r}
-hash <- south |> 
+hash_id <- south |> 
   filter_out(time_point == "T1") |> 
   filter(age > 20) |> 
   select(province, site) |> 
@@ -447,7 +447,7 @@ hash <- south |>
 Completing the site ID when missing:
 
 ```{r}
-south <- mutate(south, across(site, ~ ifelse(is.na(.x), hash[province], .x)))
+south <- mutate(south, across(site, ~ ifelse(is.na(.x), hash_id[province], .x)))
 ```
 
 Which gives:
@@ -462,33 +462,33 @@ south
 Hash table for conclusion:
 
 ```{r}
-hash <- c("Am tinh"    = "Neg",
-          "Duong tinh" = "Pos",
-          "Nghi ngo"   = "Equi",
-          "Equi"       = "Equi",
-          "Pos"        = "Pos",
-          "Neg"        = "Neg",
-          "pós"        = "Pos")
+hash_conclusion <- c("Am tinh"    = "Neg",
+                     "Duong tinh" = "Pos",
+                     "Nghi ngo"   = "Equi",
+                     "Equi"       = "Equi",
+                     "Pos"        = "Pos",
+                     "Neg"        = "Neg",
+                     "pós"        = "Pos")
 ```
 
 Hash table for the variable names of the northern part of the country:
 
 ```{r}
-translation <- c("Benh vien"     = "hospital",  
-                 "Ten benh vien" = "province",
-                 "Lab ID"        = "Lab ID",
-                 "Ma benh vien"  = "site",
-                 "Dot lay mau"   = "collection",
-                 "Ma benh pham"  = "participant",
-                 "Study ID"      = "sample_ID",
-                 "Ten viet tat"  = "initials",
-                 "Do tuoi"       = "age",
-                 "Gioi tinh"     = "sex",
-                 "Khoa"          = "ward",
-                 "Ngay nhan mau" = "reception_date",
-                 "Ngay thu mau"  = "collection_date",
-                 "Note"          = "Note",
-                 "Ghi chu"       = "Note2")
+hash_translation <- c("Benh vien"     = "hospital",  
+                      "Ten benh vien" = "province",
+                      "Lab ID"        = "Lab ID",
+                      "Ma benh vien"  = "site",
+                      "Dot lay mau"   = "collection",
+                      "Ma benh pham"  = "participant",
+                      "Study ID"      = "sample_ID",
+                      "Ten viet tat"  = "initials",
+                      "Do tuoi"       = "age",
+                      "Gioi tinh"     = "sex",
+                      "Khoa"          = "ward",
+                      "Ngay nhan mau" = "reception_date",
+                      "Ngay thu mau"  = "collection_date",
+                      "Note"          = "Note",
+                      "Ghi chu"       = "Note2")
 ```
 
 Hash table for the `sex` variable:
@@ -499,11 +499,11 @@ Hash table for the `sex` variable:
 ```
 
 A function that translates the names of the variable of a data frame from Vietnamese to
-English using the `translation` hash table:
+English using the `hash_translation` hash table:
 
 ```{r}
 convert_var_names <- function(df) {
-  names(df) <- translation[names(df)]
+  names(df) <- hash_translation[names(df)]
   df
 }
 ```
@@ -519,7 +519,7 @@ titers <- map(c("IgG Serion 2025 Measles 3021 mau.xls",
   select(-STT, -`ID mau`) |> 
   rename(titer      = `Nong do khang the`,
          conclusion = `Ket qua`) |> 
-  mutate(across(conclusion, ~ hash[convert(.x)])) |> 
+  mutate(across(conclusion, ~ hash_conclusion[convert(.x)])) |> 
   unique()
 ```
 
@@ -584,7 +584,7 @@ filter(north, reception_date < collection_date)
 #### All
 
 ```{r}
-dataset_all <- north |> 
+dataset <- north |> 
   mutate(collection_date = as_date(ifelse(is.na(collection_date),
                                           reception_date, collection_date))) |> 
   select(-reception_date, -lab_ID) |> 
@@ -595,17 +595,17 @@ dataset_all <- north |>
 Checking the thresholds:
 
 ```{r}
-dataset_all |> 
+dataset |> 
   filter(conclusion == "Neg") |> 
   pull(titer) |> 
   max()
 
-dataset_all |> 
+dataset |> 
   filter(conclusion == "Equi") |> 
   pull(titer) |> 
   range()
 
-dataset_all |> 
+dataset |> 
   filter(conclusion == "Pos") |> 
   pull(titer) |> 
   min()
@@ -614,7 +614,7 @@ dataset_all |>
 Number of samples per site per time point:
 
 ```{r}
-(nb_samples <- dataset_all |> 
+(nb_samples <- dataset |> 
   group_by(province, time_point) |> 
   tally() |> 
   ungroup() |> 
@@ -727,7 +727,7 @@ nb_samples2 <- gadm1 |>
   left_join(nb_samples, y = _, "province") |> 
   arrange(desc(latitude))
 
-dataset_all |> 
+dataset |> 
   group_by(province, collection_date) |> 
   tally() |> 
   ungroup() |> 
@@ -779,7 +779,7 @@ south |>
 ```
 
 ```{r fig-sampling_intensity}
-dataset_all |> 
+dataset |> 
   group_by(collection_date) |> 
   tally() |> 
   with(plot(collection_date, n, type = "h", col = "grey", xlab = NA,

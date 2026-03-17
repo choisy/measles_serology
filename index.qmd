@@ -759,10 +759,7 @@ barplot2 <- function(x, n1 = 5, n2 = 10, ad = 20, mn = 0, mx = 31, col = 4, ...)
   if (sum(x$Freq) < 1) {
     plot_blank()
   } else {
-    with(x, {
-      barplot(Freq, space = 0, col = col, ...)
-      mtext(province[1], line = -.5)
-    })
+    with(x, barplot(Freq, space = 0, col = col, ...))
     segments2(mn, n1, ad, n1)
     segments2(ad, n2, mx, n2)
   }
@@ -804,30 +801,34 @@ par(opar)
 ```{r}
 barplot_row <- function(x, ylim) {
   plot_blank()
+  text(1, 1, x$province[1])
   x |> 
     group_by(time_point) |> 
     group_split() |> 
-    walk(~ barplot2(.x, ylim = ylim))
+    walk2(c(TRUE, FALSE, FALSE), ~ barplot2(.x, ylim = ylim, axes = .y))
 }
 ```
 
-```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 4}
+```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 6}
+province_order <- nb_samples2 |> 
+  mutate(order = row_number()) |> 
+  select(province, order)
+
 tmp <- dataset |> 
   with(table(age_group, province, time_point)) |>
-  as.data.frame()
+  as.data.frame() |> 
+  left_join(province_order, "province") |> 
+  arrange(order, time_point, age_group)
 
 ylim <- c(0, max(tmp$Freq))
 
-opar <- par2(mfcol = c(20, 4), plt = c(.12, .985, .1, .9))
+#opar <- par2(mfrow = c(20, 4), plt = c(.12, .985, .1, .9))
+opar <- par2(mfrow = c(20, 4), plt = c(.12, .985, .05, 1))
 
 tmp |> 
-  group_by(province) |> 
-  group
-
-#tmp |> 
-#  group_by(time_point, province) |> 
-#  group_split() |> 
-#  walk(~ barplot2(.x, ylim = ylim))
+  group_by(order) |> 
+  group_split() |> 
+  walk(~ barplot_row(.x, ylim = ylim))
 
 par(opar)
 ```

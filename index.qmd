@@ -767,6 +767,12 @@ barplot_row <- function(x, ylim) {
 Number of sample per age class, per province, per time point:
 
 ```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 6}
+#| fig-cap: "Number of samples collected as a function of age class and site for the
+#| three time points (Dec 2019, Dec 2022 and Apr 2024). Age classes are 1-year age
+#| classes from 0 to 20 and 5-year age classes from 20 to 70 year-old. The horizontal
+#| red lines show the targetted number of samples per age class which are 5 for the
+#| 1-year age classes below 20 year-old and 10 for the 5-year age classes above 20
+#| year-old."
 province_order <- nb_samples2 |> 
   mutate(order = row_number()) |> 
   select(province, order)

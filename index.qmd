@@ -633,14 +633,16 @@ st_crs(gadm1) <- st_crs(gadm1)
 
 gadm1 <- gadm1 |> 
   rename(province = VARNAME_1) |> 
-  select(province, geometry) |> 
+  select(province) |> 
   mutate(across(province, ~ .x |>
                   str_replace("Thua Thien Hue", "Hue") |>
                   str_replace("Ho Chi Minh", "HCMC")),
-         centroid = geometry |> st_centroid() |> st_coordinates()) |> 
+         centroid = geometry |> st_centroid() |> st_coordinates(),
+         latitude = centroid[, "Y"]) |> 
   left_join(nb_samples, "province") |> 
   replace_na2() |> 
-  mutate(col = col_map[(T1 < 1) + (T2 < 1) + (T3 < 1) + 1])
+  mutate(col = col_map[(T1 < 1) + (T2 < 1) + (T3 < 1) + 1]) |> 
+  select(province, latitude, col)
 ```
 
 Plotting the provinces from which samples where collected:
@@ -660,6 +662,23 @@ par(opar)
 
 ### Sampling intensity
 
+The number of samples per province and time point together with latitude and color:
+
+```{r}
+nb_samples2 <- gadm1 |>
+  st_drop_geometry() |> 
+  left_join(nb_samples, y = _, "province") |> 
+  arrange(desc(latitude))
+```
+
+The order of provinces according to latitude:
+
+```{r}
+province_order <- nb_samples2 |> 
+  mutate(order = row_number()) |> 
+  select(province, order)
+```
+
 Number of samples per day and site:
 
 ```{r fig-nb_sample_day_site, fig.height = 1.2 * eps * figh}
@@ -670,13 +689,6 @@ Number of samples per day and site:
 hzl <- 1:20
 
 opar <- par(plt = c(.105, .97, .1, .9))
-
-nb_samples2 <- gadm1 |>
-  st_drop_geometry() |> 
-  mutate(latitude = centroid[, "Y"]) |> 
-  select(province, latitude, col) |> 
-  left_join(nb_samples, y = _, "province") |> 
-  arrange(desc(latitude))
 
 dataset |> 
   group_by(province, collection_date) |> 
@@ -712,6 +724,7 @@ An alternative representation:
 #| samples as a function of space and time. The the latter, the color code is the same
 #| as for @fig-map."
 opar <- par(plt = c(.0825, .9125, .15, .95))
+
 dataset |> 
   group_by(collection_date) |> 
   tally() |> 
@@ -755,8 +768,7 @@ A function that plots the age distributions of one site:
 
 ```{r}
 barplot_row <- function(x, ylim) {
-  plot4(1)
-  text(1, 1, x$province[1])
+  plot4(1); text(1, 1, x$province[1])
   x |> 
     group_by(time_point) |> 
     group_split() |> 
@@ -767,15 +779,12 @@ barplot_row <- function(x, ylim) {
 Number of sample per age class, per province, per time point:
 
 ```{r fig-nb_samples_site_timepoint_ageclass, fig.width = 7, fig.height = 100 / 6}
-#| fig-cap: "Number of samples collected as a function of age class and site for the
-#| three time points (Dec 2019, Dec 2022 and Apr 2024). Age classes are 1-year age
-#| classes from 0 to 20 and 5-year age classes from 20 to 70 year-old. The horizontal
-#| red lines show the targetted number of samples per age class which are 5 for the
-#| 1-year age classes below 20 year-old and 10 for the 5-year age classes above 20
-#| year-old."
-province_order <- nb_samples2 |> 
-  mutate(order = row_number()) |> 
-  select(province, order)
+#| fig-cap: "Number of samples collected as a function of age class and site (ordered
+#| from south to north from bottom to top) for the three time points (Dec 2019, Dec
+#| 2022 and Apr 2024 from left to right). Age classes are 1-year age classes from 0 to
+#| 20 and 5-year age classes from 20 to 70 year-old. The horizontal red lines show the
+#| targetted number of samples per age class which are 5 for the 1-year age classes
+#| below 20 year-old and 10 for the 5-year age classes above 20 year-old."
 
 tmp <- dataset |> 
   with(table(age_group, province, time_point)) |>
@@ -798,17 +807,38 @@ par(opar)
 
 ### Gender distribution
 
-```{r fig-sex_distribution, fig.width = .7 * 7, fig.height = .7 * 50 / 3}
-opar <- par(mfcol = c(10, 3), plt = c(.05, .95, .01, .91))
-south |> 
+A function that plots the sex distributions of one site:
+
+```{r}
+pie_row <- function(x, col = c(rgb2(247, 114, 184), rgb2(62, 146, 247))) {
+  plot4(1); text(1, 1, x$province[1], xpd = TRUE)
+  x |> 
+    group_by(time_point) |> 
+    group_split() |> 
+    walk(~ with(.x, pie2(Freq, NA, col = col)))
+}
+```
+
+Number of sample per sex, per province, per time point:
+
+```{r fig-sex_distribution, fig.width = (4 * .7 * 7 / 3) / 3, fig.height = (.7 * 100 / 3) / 3}
+#| fig-cap: "Proportion of female (pink) and male (blue) samples as a function of site
+#| (ordered from south to north from bottom to top) for the three time points (Dec
+#| 2019, Dec 2022 and Apr 2024 from left to right)."
+
+tmp <- dataset |> 
   with(table(sex, province, time_point)) |> 
   as.data.frame() |> 
-  group_by(time_point, province) |> 
+  left_join(province_order, "province") |> 
+  arrange(order, time_point, sex)
+
+opar <- par(mfrow = c(20, 4), plt = c(.12, .985, .05, 1))
+
+tmp |> 
+  group_by(order) |> 
   group_split() |> 
-  walk(~ with(.x, {
-    pie2(Freq, NA, col = c(rgb2(247, 114, 184), rgb2(62, 146, 247)))
-    mtext(province[1], line = -.5)
-  }))
+  walk(pie_row)
+
 par(opar)
 ```
 

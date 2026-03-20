@@ -882,14 +882,16 @@ plot_titers <- function(df, main = NULL, ...) {
 Plotting the distribution of all the titers, across the 3 time points and the 10 sites:
 
 ```{r fig-distribution_titers}
-plot_titers(south)
+#| fig-cap: "Distribution of titers across all sites and time points. Colors show
+#| negative (red), equivocal (orange) and positive (green)."
+plot_titers(dataset)
 ```
 
 The corresponding proportions in each of the 3 categories of titer values are the
 following:
 
 ```{r}
-south |> 
+dataset |> 
   group_by(conclusion) |> 
   tally2()
 ```
@@ -897,13 +899,15 @@ south |>
 The distributions of all the titers across the 10 sites for each time point separately:
 
 ```{r fig-distribution_titers_timepoints, fig.width = .7 * eps * figw, fig.height = .7 * 3 * eps * figh}
+#| fig-cap: "Distribution of titers across all sites for the 3 time points. Colors show
+#| negative (red), equivocal (orange) and positive (green)."
 timepoints <- c(paste("Dec", c(2019, 2022)), "Apr 2024")
 
 opar <- par2(mfrow = c(3, 1), plt = c(.13, .97, .18, .95))
-south |> 
+dataset |> 
   group_by(time_point) |> 
   group_split() |> 
-  walk2(timepoints, ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, .8)))
+  walk2(timepoints, ~ plot_titers(.x, .y, xlim = c(.5, 4.5), ylim = c(0, 1.15)))
 par(opar)
 ```
 
@@ -911,7 +915,7 @@ The corresponding proportions in each of the 3 categories of titer values and fo
 time point are the following:
 
 ```{r}
-south |> 
+dataset |> 
   group_by(time_point, conclusion) |> 
   tally2() |> 
   pivot_wider(id_cols = -n, names_from = time_point, values_from = prop)

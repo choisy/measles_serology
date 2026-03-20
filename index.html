@@ -977,15 +977,15 @@ Figure&nbsp;5: Proportion of female (pink) and male (blue) samples as a function
 </div>
 <p>Plotting the distribution of all the titers, across the 3 time points and the 10 sites:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_titers</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_titers</span>(dataset)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-distribution_titers" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
+<div id="fig-distribution_titers" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-distribution_titers-1.png" id="fig-distribution_titers" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
+<img src="index_files/figure-html/fig-distribution_titers-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Distribution of titers across all sites and time points. Colors show negative (red), equivocal (orange) and positive (green).
 </figcaption>
 </figure>
 </div>
@@ -993,16 +993,16 @@ Figure&nbsp;6
 </div>
 <p>The corresponding proportions in each of the 3 categories of titer values are the following:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(conclusion) <span class="sc">|&gt;</span> </span>
 <span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally2</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 3
   conclusion     n  prop
   &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt;
-1 Equi         297  5.33
-2 Neg          879 15.8 
-3 Pos         4397 78.9 </code></pre>
+1 Equi         453  4.90
+2 Neg         1290 13.9 
+3 Pos         7510 81.2 </code></pre>
 </div>
 </div>
 <p>The distributions of all the titers across the 10 sites for each time point separately:</p>
@@ -1010,19 +1010,19 @@ Figure&nbsp;6
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>timepoints <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste</span>(<span class="st">"Dec"</span>, <span class="fu">c</span>(<span class="dv">2019</span>, <span class="dv">2022</span>)), <span class="st">"Apr 2024"</span>)</span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par2</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">13</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
 <span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point) <span class="sc">|&gt;</span> </span>
 <span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk2</span>(timepoints, <span class="sc">~</span> <span class="fu">plot_titers</span>(.x, .y, <span class="at">xlim =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="fl">4.5</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">8</span>)))</span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk2</span>(timepoints, <span class="sc">~</span> <span class="fu">plot_titers</span>(.x, .y, <span class="at">xlim =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="fl">4.5</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">1.15</span>)))</span>
 <span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-distribution_titers_timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" width="376.32" data-fig-align="center">
+<div id="fig-distribution_titers_timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-distribution_titers_timepoints-1.png" id="fig-distribution_titers_timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="376">
+<img src="index_files/figure-html/fig-distribution_titers_timepoints-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="376">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Distribution of titers across all sites for the 3 time points. Colors show negative (red), equivocal (orange) and positive (green).
 </figcaption>
 </figure>
 </div>
@@ -1030,7 +1030,7 @@ Figure&nbsp;7
 </div>
 <p>The corresponding proportions in each of the 3 categories of titer values and for each time point are the following:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point, conclusion) <span class="sc">|&gt;</span> </span>
 <span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally2</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> <span class="sc">-</span>n, <span class="at">names_from =</span> time_point, <span class="at">values_from =</span> prop)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1038,9 +1038,9 @@ Figure&nbsp;7
 <pre><code># A tibble: 3 × 4
   conclusion    T1    T2    T3
   &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 Equi         4.8  5.32  5.93
-2 Neg         12.0 19.6  16.2 
-3 Pos         83.2 75.1  77.8 </code></pre>
+1 Equi        4.83  4.47  5.93
+2 Neg        11.4  15.5  16.2 
+3 Pos        83.8  80.1  77.8 </code></pre>
 </div>
 </div>
 <section id="age-profile" class="level3" data-number="7.1">

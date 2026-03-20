@@ -78,6 +78,12 @@ readRDScache <- function(x) readRDS(make_path(x))
 saveRDScache <- function(object, file) saveRDS(object, make_path(file))
 ```
 
+Some labels definitions:
+
+```{r}
+titer_lab <- "titer (IU/L)"
+age_lab <- "age (years)"
+```
 
 ## Packages
 
@@ -139,6 +145,9 @@ Tunings of the `plot()` function:
 plot2 <- function(...) plot(..., axes = FALSE)
 plot3 <- function(...) plot2(..., ann = FALSE)
 plot4 <- function(...) plot3(..., type = "n")
+plot_titers_empty <- function(...) {
+  plot2(..., type = "n", xlab = titer_lab, ylab = "density")
+}
 ```
 
 A tuning of the `pie()` function:
@@ -337,6 +346,20 @@ data frame:
 add_colsum <- function(df) {
   bind_rows(df, map_dfr(df, function(x) ifelse(is.numeric(x), sum(x), NA)))
 }
+```
+
+A tuning of the `polygon()` function:
+
+```{r}
+polygon2 <- function(x, y, col, ...) {
+  polygon(c(first(x), x, last(x)), c(0, y, 0), col = col, border = col, ...)
+}
+```
+
+A tuning of `hcl.colors()`:
+
+```{r}
+yellow_red <- function(n) hcl.colors(n, "YlOrRd", rev = TRUE)
 ```
 
 
@@ -853,7 +876,7 @@ values:
 
 ```{r}
 ptiters <- function(df, main = NULL, th1 = 150, th2 = 200, lb2 = 1:5, ...) {
-  plot2(df, type = "n", xlab = "titer (IU/L)", ylab = "density", ...)
+  plot_titers_empty(df, ...)
   logaxis(1); axis(2)
   df |> 
     group_by(cut(x, c(-Inf, log10(c(th1, th2)), Inf))) |> 
@@ -936,7 +959,7 @@ A function that plots an image of the distribution of titers (along the $y$ axis
 all the age classes (on the $x$ axis):
 
 ```{r}
-image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n = 512,
+image_titer_density_age <- function(data, xaxis = TRUE, xlab = age_lab, n = 1024,
                                     min_titer = NULL, max_titer = NULL, buff = TRUE,
                                     breaks = seq(.95, .05, -.05)) {
   if (is.null(min_titer)) min_titer <- min(data$titer)
@@ -958,8 +981,8 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = "age (years)", n 
     as.matrix() |> 
     t() |>
     image(1:70 - .5, seq(min_titer, max_titer, le = n), z = _, axes = FALSE,
-          xlab = xlab, ylab = "titer (IU/L)",
-          col = hcl.colors(length(breaks), "YlOrRd", rev = TRUE))
+          xlab = xlab, ylab = titer_lab,
+          col = yellow_red(length(breaks) + 1))
   
   if (xaxis) axis(1)
   logaxis(2)
@@ -980,19 +1003,75 @@ add_years_on_top <- function(at = 10 * 0:7, line = 1.7) {
 Let's plot the distributions of the titers as a function of age:
 
 ```{r fig-titer_density_age, fig.height = 2 * eps * figh}
+#| fig-cap: "Distribution of titers across all sites and time points for the 10 age
+#| classes. Colors show 20 ranges of high density intervals (HDI) from 0 (yellow) to 1
+#| (red) by steps of 0.05."
+
+ymin <- .9
+ymax <- 4.3
+
 opar <- par(plt = c(.105, .97, .5, 1 - (1 - .95) / 2 - .15 / 2))
-south |> 
+
+dataset |> 
   filter_out(age_group == "[70,100)") |> 
-  with(plot(age, log10(titer), col = adjustcolor(4, .2), xlim = c(0, 70), axes = FALSE,
-            xlab = NA, ylab = "titer (IU/L)", xaxs = "i", xpd = TRUE))
+  with(plot(age, log10(titer), col = adjustcolor(4, .2), axes = FALSE, xaxs = "i",
+            xlim = c(0, 70), ylim = c(ymin, ymax), xpd = TRUE,
+            xlab = NA, ylab = titer_lab))
 logaxis(2); box(bty = "o")
 add_years_on_top()
 add_thresholds()
+
 par(plt = c(.105, .97, .15 / 2 + (1 - .95) / 2, .5), new = TRUE)
-south |>
+
+dataset |>
   mutate(across(titer, log10)) |> 
-  image_titer_density_age()
+  image_titer_density_age(min_titer = ymin, max_titer = ymax)
+
 par(opar)
+```
+
+A function that plots the density with a color code according to the high density
+interval (HDI):
+
+```{r}
+plot_density_HDI <- function(df, breaks = seq(.95, .05, -.05),
+                             n = 1024, from = .9, to = 4.3) {
+  df <- df |> 
+    with(as_tibble(density(titer, from = from, to = to, n = n)[c("x", "y")])) |> 
+    mutate(cat = as.numeric(cut(y, c(0, map_dbl(breaks, ci2th, v = y), max(y)))),
+           subcat   = cumsum(c(0, diff(cat)) != 0))
+  
+  add_polygons <- function(ct, cl) {
+    df |> 
+      filter(cat == ct) |> 
+      group_by(subcat) |> 
+      group_walk(~ polygon2(.x$x, .x$y, col = cl))
+  }
+  
+  with(df, plot_titers_empty(x, y))
+  logaxis(1); axis(2)
+  walk2(seq_along(c(0, breaks)), yellow_red(length(breaks) + 1),
+        ~ add_polygons(.x, .y))
+}
+```
+
+Let's look at the density of titers for the 10-11 year-old for example:
+
+```{r fig-titer_density_HDI}
+#| fig-cap: "An example of the distribution of the titers for the 10-11 year-old
+#| children together with a color code mapping high density intervals (HDI) from 0
+#| (yellow) to 1 (red) by steps of 0.05."
+
+dataset |> 
+  filter(age_group == "[10,11)") |>
+  mutate(across(titer, log10)) |> 
+  plot_density_HDI()
+```
+
+The scale:
+
+```{r}
+image(t(matrix(1:20)), col = yellow_red(20), axes = FALSE)
 ```
 
 
@@ -1147,7 +1226,7 @@ names `x`, `fit`, `ll` and `ul`. This function plots the predictions of a GAM mo
 ```{r}
 plot_pred <- function(pred, ylim = NULL, col = 4, ...) {
   if (is.null(ylim)) ylim <- 0:1
-  with(pred, plotn(x, fit, ylim = ylim, xlab = "age (years)", ...))
+  with(pred, plotn(x, fit, ylim = ylim, xlab = age_lab, ...))
   abline2(v = c(.75, 1.5, seq(5, 65, 10)))
   abline3(v = seq(10, 60, 10))
   add_ribbon(pred, col)

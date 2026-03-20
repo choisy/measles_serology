@@ -562,17 +562,18 @@ window.Quarto = {
 <span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(collection_date, convert_date),</span>
 <span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(reception_date, <span class="sc">~</span> <span class="fu">as_date</span>(<span class="fu">ifelse</span>(.x <span class="sc">==</span> <span class="st">"30/10/2020"</span>, <span class="fu">ymd</span>(<span class="dv">20201030</span>),</span>
 <span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>                                                 <span class="fu">convert_date</span>(.x)))),</span>
-<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">sex       =</span> hash_sex[<span class="fu">tolower</span>(sex)],</span>
-<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">unit      =</span> <span class="fu">convert</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>)),</span>
-<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">age       =</span> <span class="fu">as.numeric</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>)),</span>
-<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">age       =</span> <span class="fu">ifelse</span>(unit <span class="sc">==</span> <span class="st">"ngay"</span>, age <span class="sc">/</span> <span class="dv">365</span>,</span>
-<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">ifelse</span>(unit <span class="sc">==</span> <span class="st">"thang"</span>, age <span class="sc">/</span> <span class="dv">12</span>, age)),</span>
-<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_group =</span> <span class="fu">make_age_group</span>(age)) <span class="sc">|&gt;</span> </span>
-<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(titers, <span class="at">y =</span> _, <span class="st">"Lab ID"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">lab_ID =</span> <span class="st">`</span><span class="at">Lab ID</span><span class="st">`</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, site, collection, sample_ID, age_group, age, sex,</span>
-<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a>         collection_date, reception_date, lab_ID, titer, conclusion) <span class="sc">|&gt;</span> </span>
-<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time_point =</span> <span class="fu">ifelse</span>(collection <span class="sc">==</span> <span class="st">"01"</span>, <span class="st">"T1"</span>, <span class="st">"T2"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">sex       =</span> hash_sex[<span class="fu">tolower</span>(<span class="fu">convert</span>(sex))],</span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">sex       =</span> <span class="fu">ifelse</span>(sample_ID <span class="sc">==</span> <span class="st">"108-09-0357"</span>, <span class="st">"female"</span>, sex), <span class="co"># correction</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">unit      =</span> <span class="fu">convert</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>)),</span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">age       =</span> <span class="fu">as.numeric</span>(<span class="fu">str_remove_all</span>(age, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>)),</span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">age       =</span> <span class="fu">ifelse</span>(unit <span class="sc">==</span> <span class="st">"ngay"</span>, age <span class="sc">/</span> <span class="dv">365</span>,</span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">ifelse</span>(unit <span class="sc">==</span> <span class="st">"thang"</span>, age <span class="sc">/</span> <span class="dv">12</span>, age)),</span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_group =</span> <span class="fu">make_age_group</span>(age)) <span class="sc">|&gt;</span> </span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(titers, <span class="at">y =</span> _, <span class="st">"Lab ID"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">lab_ID =</span> <span class="st">`</span><span class="at">Lab ID</span><span class="st">`</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(participant, province, site, collection, sample_ID, age_group, age, sex,</span>
+<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a>         collection_date, reception_date, lab_ID, titer, conclusion) <span class="sc">|&gt;</span> </span>
+<span id="cb49-26"><a href="#cb49-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time_point =</span> <span class="fu">ifelse</span>(collection <span class="sc">==</span> <span class="st">"01"</span>, <span class="st">"T1"</span>, <span class="st">"T2"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Check:</p>
 <div class="cell" data-layout-align="center">
@@ -581,7 +582,7 @@ window.Quarto = {
 <pre><code>    participant        province            site      collection       sample_ID 
               0               0               0               0               0 
       age_group             age             sex collection_date  reception_date 
-              2               2             168            1910               3 
+              2               2              20            1910               3 
          lab_ID           titer      conclusion      time_point 
               0               0               0               0 </code></pre>
 </div>
@@ -978,7 +979,7 @@ Figure&nbsp;5: Proportion of female (pink) and male (blue) samples as a function
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_titers</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-distribution_titers" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-distribution_titers" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-distribution_titers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-distribution_titers-1.png" id="fig-distribution_titers" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1015,7 +1016,7 @@ Figure&nbsp;6
 <span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk2</span>(timepoints, <span class="sc">~</span> <span class="fu">plot_titers</span>(.x, .y, <span class="at">xlim =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="fl">4.5</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">8</span>)))</span>
 <span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-distribution_titers_timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="376.32">
+<div id="fig-distribution_titers_timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" width="376.32" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-distribution_titers_timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-distribution_titers_timepoints-1.png" id="fig-distribution_titers_timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="376">
@@ -1106,7 +1107,7 @@ Figure&nbsp;7
 <span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">image_titer_density_age</span>()</span>
 <span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-titer_density_age" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-titer_density_age" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-titer_density_age-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-titer_density_age-1.png" id="fig-titer_density_age" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1334,7 +1335,7 @@ Figure&nbsp;8
 <span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_pred</span>()</span>
 <span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a><span class="fu">abline3</span>(<span class="at">h =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">9</span> <span class="sc">/</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-gam_seroprev" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-gam_seroprev" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-gam_seroprev-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-gam_seroprev-1.png" id="fig-gam_seroprev" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1350,7 +1351,7 @@ Figure&nbsp;9
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_seroprevalences</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-gam_seroprev2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-gam_seroprev2" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-gam_seroprev2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-gam_seroprev2-1.png" id="fig-gam_seroprev2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1373,7 +1374,7 @@ Figure&nbsp;10
 <span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_seroprevalences</span>(south)</span>
 <span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-titers_seroprevalences" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-titers_seroprevalences" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-titers_seroprevalences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-titers_seroprevalences-1.png" id="fig-titers_seroprevalences" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1573,7 +1574,7 @@ Attaching package: 'MASS'</code></pre>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprev3timepoints</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-T1T2T3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-T1T2T3" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-T1T2T3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-T1T2T3-1.png" id="fig-T1T2T3" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1588,7 +1589,7 @@ Figure&nbsp;12
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprevT1T2</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-T1T2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-T1T2" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-T1T2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-T1T2-1.png" id="fig-T1T2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1609,7 +1610,7 @@ Figure&nbsp;13
 <span id="cb134-6"><a href="#cb134-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(seroprev3timepoints, <span class="at">title =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb134-7"><a href="#cb134-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-seroprev_provinces_3timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="806.4">
+<div id="fig-seroprev_provinces_3timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" width="806.4" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-seroprev_provinces_3timepoints-1.png" id="fig-seroprev_provinces_3timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
@@ -1630,7 +1631,7 @@ Figure&nbsp;14
 <span id="cb135-6"><a href="#cb135-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(plot_age_profile, <span class="dv">200</span>)</span>
 <span id="cb135-7"><a href="#cb135-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-seroprev_provinces" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="806.4">
+<div id="fig-seroprev_provinces" class="quarto-float quarto-figure quarto-figure-center anchored" width="806.4" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-seroprev_provinces-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-seroprev_provinces-1.png" id="fig-seroprev_provinces" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">

@@ -1074,6 +1074,16 @@ The scale:
 image(t(matrix(1:20)), col = yellow_red(20), axes = FALSE)
 ```
 
+### Provinces
+
+```{r}
+dataset |> 
+  filter(time_point == "T2", province %in% c("Hue", "Quang Ngai")) |> 
+  mutate(across(titer, log10)) |> 
+  gam2(titer ~ s(age) + province, data = _) |> 
+  anova()
+```
+
 
 ## Sero-prevalence
 

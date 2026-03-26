@@ -252,8 +252,8 @@ A tuning of the `predict()` function:
 predict2 <- function(...) mgcv::predict.gam(..., type = "response")
 ```
 
-The following function takes a vector `x` of densities of probabilities as an input and
-returns a threshold value above which the values of `x` belong to the `p` confidence
+The following function takes a vector `v` of densities of probabilities as an input and
+returns a threshold value above which the values of `v` belong to the `p` confidence
 interval:
 
 ```{r}
@@ -264,31 +264,31 @@ ci2th <- function(v, p) {
 }
 ```
 
+A tuning of the `cut()` function:
+
+```{r}
+cut2 <- function(x, ...) {
+  if (all(is.na(x))) return(x)
+  cut(x, ...)
+}
+```
+
 The following function converts a vector `x` of densities of probabilities into a
 vector of quantile belonging where the quantiles are defined by the vector `breaks`:
 
 ```{r}
 quantval2quantcat <- function(x, breaks = seq(.95, .05, -.05)) {
-  as.numeric(cut(x, c(0, map_dbl(breaks, ci2th, v = x), max(x))))
+  as.numeric(cut2(x, c(0, map_dbl(breaks, ci2th, v = x), max(x))))
 }
 ```
 
-A function that extracts the last `x` characters of a character string `x`:
-
-```{r}
-#lastx <- function(v, x) {
-#  nb <- nchar(v)
-#  substr(v, nb - x + 1, nb)
-#}
-```
-
-A function that convert Vietnamese characters into Latin characters:
+A function that converts Vietnamese characters into Latin characters:
 
 ```{r}
 convert <- function(x) stringi::stri_trans_general(x, "Latin-ASCII")
 ```
 
-A function that convert the names of a data frame into Latin ASCII:
+A function that converts the names of a data frame into Latin ASCII:
 
 ```{r}
 latin_var_names <- function(df) {
@@ -360,6 +360,21 @@ A tuning of `hcl.colors()`:
 
 ```{r}
 yellow_red <- function(n) hcl.colors(n, "YlOrRd", rev = TRUE)
+```
+
+A tuning of the `str_split()` function:
+
+```{r}
+str_split2 <- function(...) first(stringr::str_split(...))
+```
+
+A tuning of the `density()` function:
+
+```{r}
+density2 <- function(x, from, to, n, ...) {
+  if (length(x) < 2) return(rep(NA, n))
+  density(x, from = from, to = to, n = n, ...)$y
+}
 ```
 
 
@@ -974,7 +989,7 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = age_lab, n = 1024
   data |> 
     filter(age < 70) |> 
     group_by(age_group) |> 
-    group_map(~ density(.x$titer, from = min_titer, to = max_titer, n = n)$y) |> 
+    group_map(~ density2(.x$titer, min_titer, max_titer, n)) |> 
     rep(c(rep(1, 20), rep(5, 10))) |> # age classes
     map(quantval2quantcat, breaks) |> # this computes the categorical HDI
     as.data.frame() |> 
@@ -1074,14 +1089,92 @@ The scale:
 image(t(matrix(1:20)), col = yellow_red(20), axes = FALSE)
 ```
 
+
 ### Provinces
 
+A function that compares all pairs of provinces in the data frame `df`:
+
 ```{r}
-dataset |> 
-  filter(time_point == "T2", province %in% c("Hue", "Quang Ngai")) |> 
+compare_provinces <- function(df) {
+  
+  compare_provinces_ <- function(p1, p2) {
+    df2 <- df |>
+      filter(province %in% c(p1, p2)) |> 
+      mutate(across(province, as.factor))
+    list(m0 = gam2(titer ~ s(age), data = df2),
+         m1 = gam2(titer ~ province + s(age, by = province), data = df2))
+  }
+
+  prov_names <- unique(df$province)
+  nb_prov <- length(prov_names)
+  i_vals <- 1:(nb_prov - 1)
+  out <- vector("list", sum(i_vals))
+  k <- 1
+  
+  for(i in i_vals) {
+    for(j in (i + 1):nb_prov) {
+      out[[k]] <- compare_provinces_(prov_names[i], prov_names[j])
+      names(out)[k] <- paste(prov_names[i], prov_names[j], sep = " - ")
+      k <- k + 1
+    }
+  }
+  
+  out
+}
+```
+
+A function that agglomerate provinces according to their titer age profile:
+
+```{r}
+agglomerate <- function(df) {
+  Delta_AICs <- df |>
+    compare_provinces() |>
+    map_dbl(~ abs(diff(AIC(.x$m0, .x$m1)[, 2])))
+  
+  ind <- which.min(Delta_AICs)
+  if (Delta_AICs[ind] < 10) {
+    ind_name <- names(ind) 
+    
+    df <- df |> 
+      group_by(province %in% str_split2(ind_name, " - ")) |> 
+      group_split(.keep = FALSE)
+    df[[2]]$province <- str_replace(ind_name, " - ", " | ")
+    df <- bind_rows(df)
+    
+    if (length(unique(df$province)) < 2) return(df)
+    return(agglomerate(df))
+  }
+  return(df)
+}
+```
+
+Let's run it on the first time point (takes about 3'00"):
+
+```{r eval = FALSE}
+datasetT1 <- dataset |>
+  filter(time_point == "T1") |> 
   mutate(across(titer, log10)) |> 
-  gam2(titer ~ s(age) + province, data = _) |> 
-  anova()
+  agglomerate()
+```
+
+```{r include = FALSE}
+if (file_exists("datasetT1.rds")) {
+  datasetT1 <- readRDScache("datasetT1.rds")
+} else {
+  datasetT1 <- dataset |>
+    filter(time_point == "T1") |> 
+    mutate(across(titer, log10)) |> 
+    agglomerate() |> 
+    mutate(across(titer, ~ 10^.x))
+  saveRDScache(datasetT1, "datasetT1.rds")
+}
+```
+
+```{r}
+datasetT1 |> 
+  mutate(across(titer, log10)) |> 
+  group_by(province) |> 
+  group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 4.3, n = 2048))
 ```
 
 

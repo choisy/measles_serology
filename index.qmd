@@ -91,7 +91,7 @@ Required packages:
 
 ```{r}
 required <- c("sf", "readxl", "stringr", "stringi", "purrr", "tidyr", "magrittr",
-              "RColorBrewer", "lubridate", "mgcv", "dplyr")
+              "RColorBrewer", "lubridate", "mgcv", "forcats", "dplyr")
 ```
 
 Installing those that are not installed yet:
@@ -582,13 +582,14 @@ north <- c("02FL Tracking sample round 1 to 6 Final.xlsx",
                                                  convert_date(.x)))),
          sex       = hash_sex[tolower(convert(sex))],
          sex       = ifelse(sample_ID == "108-09-0357", "female", sex), # correction
-         unit      = convert(str_remove_all(age, "\\d")),
+         unit      = trimws(convert(str_remove_all(age, "\\d"))),
          age       = as.numeric(str_remove_all(age, "\\D")),
          age       = ifelse(unit == "ngay", age / 365,
                             ifelse(unit == "thang", age / 12, age)),
+         age = ifelse(`Lab ID` %in% paste(17401:17405), age, age + .5), # age correct
          age_group = make_age_group(age)) |> 
   left_join(titers, y = _, "Lab ID") |> 
-  rename(lab_ID = `Lab ID`) |> 
+  rename(lab_ID = `Lab ID`) |>
   select(participant, province, site, collection, sample_ID, age_group, age, sex,
          collection_date, reception_date, lab_ID, titer, conclusion) |> 
   mutate(time_point = ifelse(collection == "01", "T1", "T2"))
@@ -987,9 +988,10 @@ image_titer_density_age <- function(data, xaxis = TRUE, xlab = age_lab, n = 1024
   }
   
   data |> 
-    filter(age < 70) |> 
-    group_by(age_group) |> 
-    group_map(~ density2(.x$titer, min_titer, max_titer, n)) |> 
+    filter(age < 70) |>
+    mutate(across(age_group, ~ fct_recode(.x, NULL = "[70,100)"))) |> 
+    group_by(age_group, .drop = FALSE) |>
+    group_map(~ density2(.x$titer, min_titer, max_titer, n)) |>
     rep(c(rep(1, 20), rep(5, 10))) |> # age classes
     map(quantval2quantcat, breaks) |> # this computes the categorical HDI
     as.data.frame() |> 
@@ -1194,6 +1196,14 @@ datasetT1 |>
   group_by(province) |> 
   group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 4.3, n = 2048))
 ```
+
+```{r}
+data <- datasetT1 |> 
+  mutate(across(titer, log10)) |> 
+  filter(province == "Thai Binh | Lao Cai | Ha Noi | Ha Tinh") |> 
+  image_titer_density_age(min_titer = .9, max_titer = 4.3, n = 2048)
+```
+
 
 The list of province for each of the plots above:
 

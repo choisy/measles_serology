@@ -624,7 +624,8 @@ dataset <- north |>
                                           reception_date, collection_date))) |> 
   select(-reception_date, -lab_ID) |> 
   bind_rows(select(south, -plate)) |> 
-  filter_out(is.na(age_group))
+  filter_out(is.na(age_group)) |> 
+  mutate(region = ifelse(province %in% unique(north$province), "north", "south"))
 ```
 
 Checking the thresholds:
@@ -1098,13 +1099,33 @@ image(t(matrix(1:20)), col = yellow_red(20), axes = FALSE)
 
 ### Time points
 
-```{r fig-titer_density_ageT1, fig.height = 2 * eps * figh}
-#| fig-cap: "Distributions of titers across all sites and time points for the 20 age
+The age profiles of titers density in for the north and the south and the 3 time
+points:
+
+```{r include=FALSE, eval=FALSE}
+#| fig-cap: "Distributions of titers across regions and time points for the 20 age
 #| classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI)
 #| from 0 (yellow) to 1 (red) by steps of 0.05."
 dataset |> 
-  group_by(time_point) |> 
-  group_walk(~ plot_titers_age_profile(.x))
+  mutate(across(titer, log10)) |>
+  group_by(region, time_point) |> 
+  group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 3.4))
+```
+
+```{r fig-titer_age_profile_time_region}
+#| fig-cap: "Distributions of titers across regions and time points for the 20 age
+#| classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI)
+#| from 0 (yellow) to 1 (red) by steps of 0.05."
+#| fig-subcap: ["North Vietnam, T1 (Dec 2019)",
+#|              "North Vietnam, T2 (Aug 2022)",
+#|              "South Vietnam, T1 (Dec 2019)",
+#|              "South Vietnam, T2 (Dec 2022)",
+#|              "South Vietnam, T3 (Apr 2024)"]
+
+dataset |> 
+  mutate(across(titer, log10)) |>
+  group_by(region, time_point) |> 
+  group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 3.4))
 ```
 
 

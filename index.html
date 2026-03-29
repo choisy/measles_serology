@@ -665,7 +665,8 @@ window.Quarto = {
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>                                          reception_date, collection_date))) <span class="sc">|&gt;</span> </span>
 <span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>reception_date, <span class="sc">-</span>lab_ID) <span class="sc">|&gt;</span> </span>
 <span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">select</span>(south, <span class="sc">-</span>plate)) <span class="sc">|&gt;</span> </span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(<span class="fu">is.na</span>(age_group))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(<span class="fu">is.na</span>(age_group)) <span class="sc">|&gt;</span> </span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">region =</span> <span class="fu">ifelse</span>(province <span class="sc">%in%</span> <span class="fu">unique</span>(north<span class="sc">$</span>province), <span class="st">"north"</span>, <span class="st">"south"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Checking the thresholds:</p>
 <div class="cell" data-layout-align="center">
@@ -1228,45 +1229,80 @@ Figure&nbsp;9: An example of the distribution of the titers for the 10-11 year-o
 </section>
 <section id="time-points" class="level3" data-number="7.2">
 <h3 data-number="7.2" class="anchored" data-anchor-id="time-points"><span class="header-section-number">7.2</span> Time points</h3>
+<p>The age profiles of titers density in for the north and the south and the 3 time points:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="sc">|&gt;</span> </span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(time_point) <span class="sc">|&gt;</span> </span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_walk</span>(<span class="sc">~</span> <span class="fu">plot_titers_age_profile</span>(.x))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div id="fig-titer_density_ageT1-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(titer, log10)) <span class="sc">|&gt;</span></span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(region, time_point) <span class="sc">|&gt;</span> </span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_walk</span>(<span class="sc">~</span> <span class="fu">image_titer_density_age</span>(.x, <span class="at">min_titer =</span> .<span class="dv">9</span>, <span class="at">max_titer =</span> <span class="fl">3.4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-titer_age_profile_time_region" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-layout-align="center">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-titer_density_ageT1-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-titer_density_ageT1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537">
+<div aria-describedby="fig-titer_age_profile_time_region-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="fig-titer_age_profile_time_region-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-titer_age_profile_time_region-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-titer_age_profile_time_region-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-ref-parent="fig-titer_age_profile_time_region" width="537">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-titer_density_ageT1-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10: Distributions of titers across all sites and time points for the 20 age classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI) from 0 (yellow) to 1 (red) by steps of 0.05.
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-titer_age_profile_time_region-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) North Vietnam, T1 (Dec 2019)
 </figcaption>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
-<div id="fig-titer_density_ageT1-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-titer_density_ageT1-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-titer_density_ageT1-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537">
+<div id="fig-titer_age_profile_time_region-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-titer_age_profile_time_region-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-titer_age_profile_time_region-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-ref-parent="fig-titer_age_profile_time_region" width="537">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-titer_density_ageT1-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11: Distributions of titers across all sites and time points for the 20 age classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI) from 0 (yellow) to 1 (red) by steps of 0.05.
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-titer_age_profile_time_region-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) North Vietnam, T2 (Aug 2022)
 </figcaption>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
-<div id="fig-titer_density_ageT1-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-titer_density_ageT1-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-titer_density_ageT1-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537">
+<div id="fig-titer_age_profile_time_region-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-titer_age_profile_time_region-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-titer_age_profile_time_region-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-ref-parent="fig-titer_age_profile_time_region" width="537">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-titer_density_ageT1-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;12: Distributions of titers across all sites and time points for the 20 age classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI) from 0 (yellow) to 1 (red) by steps of 0.05.
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-titer_age_profile_time_region-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) South Vietnam, T1 (Dec 2019)
 </figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output-display">
+<div id="fig-titer_age_profile_time_region-4" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-titer_age_profile_time_region-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-titer_age_profile_time_region-4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-ref-parent="fig-titer_age_profile_time_region" width="537">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-titer_age_profile_time_region-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(d) South Vietnam, T2 (Dec 2022)
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-titer_age_profile_time_region-5" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-titer_age_profile_time_region-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-titer_age_profile_time_region-5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-ref-parent="fig-titer_age_profile_time_region" width="537">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-titer_age_profile_time_region-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(e) South Vietnam, T3 (Apr 2024)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-titer_age_profile_time_region-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Distributions of titers across regions and time points for the 20 age classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI) from 0 (yellow) to 1 (red) by steps of 0.05.
+</figcaption>
+</figure>
 </div>
 </div>
 </section>
@@ -1340,35 +1376,35 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-86-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-87-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-86-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-87-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-86-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-87-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-86-4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-87-4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-86-5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-87-5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
@@ -1381,7 +1417,7 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-87-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-88-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
@@ -1454,7 +1490,7 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-93-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-94-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
@@ -1469,7 +1505,7 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-94-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="376"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-95-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="376"></p>
 </figure>
 </div>
 </div>
@@ -1508,7 +1544,7 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-97-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="806"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-98-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="806"></p>
 </figure>
 </div>
 </div>
@@ -1619,7 +1655,7 @@ Figure&nbsp;12: Distributions of titers across all sites and time points for the
 <img src="index_files/figure-html/fig-gam_seroprev-1.png" id="fig-gam_seroprev" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-gam_seroprev-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13
+Figure&nbsp;11
 </figcaption>
 </figure>
 </div>
@@ -1635,7 +1671,7 @@ Figure&nbsp;13
 <img src="index_files/figure-html/fig-gam_seroprev2-1.png" id="fig-gam_seroprev2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-gam_seroprev2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;14
+Figure&nbsp;12
 </figcaption>
 </figure>
 </div>
@@ -1658,7 +1694,7 @@ Figure&nbsp;14
 <img src="index_files/figure-html/fig-titers_seroprevalences-1.png" id="fig-titers_seroprevalences" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-titers_seroprevalences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;15
+Figure&nbsp;13
 </figcaption>
 </figure>
 </div>
@@ -1742,7 +1778,7 @@ may be inaccurate</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-110-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-111-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="537"></p>
 </figure>
 </div>
 </div>
@@ -1858,7 +1894,7 @@ Attaching package: 'MASS'</code></pre>
 <img src="index_files/figure-html/fig-T1T2T3-1.png" id="fig-T1T2T3" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-T1T2T3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;16
+Figure&nbsp;14
 </figcaption>
 </figure>
 </div>
@@ -1873,7 +1909,7 @@ Figure&nbsp;16
 <img src="index_files/figure-html/fig-T1T2-1.png" id="fig-T1T2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-T1T2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;17
+Figure&nbsp;15
 </figcaption>
 </figure>
 </div>
@@ -1894,7 +1930,7 @@ Figure&nbsp;17
 <img src="index_files/figure-html/fig-seroprev_provinces_3timepoints-1.png" id="fig-seroprev_provinces_3timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;18
+Figure&nbsp;16
 </figcaption>
 </figure>
 </div>
@@ -1915,7 +1951,7 @@ Figure&nbsp;18
 <img src="index_files/figure-html/fig-seroprev_provinces-1.png" id="fig-seroprev_provinces" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-seroprev_provinces-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;19
+Figure&nbsp;17
 </figcaption>
 </figure>
 </div>

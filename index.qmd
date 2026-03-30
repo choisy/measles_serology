@@ -83,6 +83,8 @@ Some labels definitions:
 ```{r}
 titer_lab <- "titer (IU/L)"
 age_lab <- "age (years)"
+col_female <- rgb(247, 114, 184, max = 255)
+col_male <- rgb(62, 146, 247, max = 255)
 ```
 
 ## Packages
@@ -252,6 +254,15 @@ A tuning of the `predict()` function:
 predict2 <- function(...) mgcv::predict.gam(..., type = "response")
 ```
 
+A tuning of the `predict2()` function:
+
+```{r}
+predict4 <- function(object, newdata, se = .95, ...) {
+  if (! is.data.frame(newdata)) newdata <- as_tibble(newdata)
+  bind_cols(newdata, as_tibble(predict2(object, newdata, se = .95, ...)))
+} 
+```
+
 The following function takes a vector `v` of densities of probabilities as an input and
 returns a threshold value above which the values of `v` belong to the `p` confidence
 interval:
@@ -348,11 +359,19 @@ add_colsum <- function(df) {
 }
 ```
 
-A tuning of the `polygon()` function:
+A tuning of the `polygon()` function for densities:
 
 ```{r}
 polygon2 <- function(x, y, col, ...) {
   polygon(c(first(x), x, last(x)), c(0, y, 0), col = col, border = col, ...)
+}
+```
+
+A tuning of the `polygon()` function for bands:
+
+```{r}
+polygon3 <- function(x, l, u, ...) {
+  polygon(c(x, rev(x)), c(l, rev(u)), border = NA, ...)
 }
 ```
 
@@ -474,6 +493,7 @@ south <- the3files |>
                                            ifelse(age_unit == "ng", age2 / 365, age2)),
                        age3),
          age = ifelse(age4 > 100, year - age4, age4),
+         across(age, ~ ifelse(.x %% 1 == 0 & .x > 0, .x + .5, .x)),
          age_group = make_age_group(age),
          across(conclusion, ~ ifelse(.x == "pós", "Pos", .x))) |> 
   select(-c(year, age_unit, age2, age3, age4, hospital)) |> 
@@ -851,7 +871,8 @@ par(opar)
 A function that plots the sex distributions of one site:
 
 ```{r}
-pie_row <- function(x, col = c(rgb2(247, 114, 184), rgb2(62, 146, 247))) {
+#pie_row <- function(x, col = c(rgb2(247, 114, 184), rgb2(62, 146, 247))) {
+pie_row <- function(x, col = c(col_female, col_male)) {  
   plot4(1); text(1, 1, x$province[1], xpd = TRUE)
   x |> 
     group_by(time_point) |> 
@@ -1102,16 +1123,6 @@ image(t(matrix(1:20)), col = yellow_red(20), axes = FALSE)
 The age profiles of titers density in for the north and the south and the 3 time
 points:
 
-```{r include=FALSE, eval=FALSE}
-#| fig-cap: "Distributions of titers across regions and time points for the 20 age
-#| classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI)
-#| from 0 (yellow) to 1 (red) by steps of 0.05."
-dataset |> 
-  mutate(across(titer, log10)) |>
-  group_by(region, time_point) |> 
-  group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 3.4))
-```
-
 ```{r fig-titer_age_profile_time_region}
 #| fig-cap: "Distributions of titers across regions and time points for the 20 age
 #| classes and the 3 time points. Colors show 20 ranges of high density intervals (HDI)
@@ -1126,6 +1137,110 @@ dataset |>
   mutate(across(titer, log10)) |>
   group_by(region, time_point) |> 
   group_walk(~ image_titer_density_age(.x, min_titer = .9, max_titer = 3.4))
+```
+
+### Titers per age class and time point
+
+A function that plots the decline of maternal antibody titers:
+
+```{r}
+plot_maternal_immunity <- function(df, remove_age0 = TRUE, k = -1, n = 512, ci = .95,
+                                   xlim = c(0, 12), ylim = c(.3, 3.4)) {
+  tmp <- df |> 
+    filter(age_group == "[0,1)") |> 
+    mutate(across(titer, log10),
+           across(age, ~ 12 * .x),
+           across(sex, ~ as.numeric(as.factor(.x))))
+  
+  if (remove_age0) tmp <- filter_out(tmp, age == 0)
+  
+  tmp |> 
+    group_by(sex) |> 
+    tally()
+  
+  preds <- tmp |>
+    gam(titer ~ s(age, k = k), data = _) |> 
+    predict4(list(age = seq(0, 12, le = n)), se = ci)
+    
+  plot(1, type = "n", xlim = xlim, ylim = ylim, yaxt = "n",
+       xlab = "age (months)", ylab = titer_lab)
+  
+  with(preds, {
+    polygon3(age, ll, ul, col = "lightgrey")
+    lines(age, fit)
+  })
+  with(tmp, points(age, titer, col = c(col_female, col_male)[sex], pch = 19))
+  abline(h = log10(c(150, 200)), col = 2:3, lty = 2)
+  abline(v = 9, lty = 2)
+  logaxis(2, 0:5)
+}
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T1") |> 
+  plot_maternal_immunity(k = 8)
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T2") |> 
+  plot_maternal_immunity()
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T3") |> 
+  plot_maternal_immunity()
+```
+
+
+```{r}
+plot_titers_age <- function(df, k = -1, col = "lightgrey", ylim = c(2, 3.5), n = 512) {
+  df |> 
+    mutate(across(age, ~ ifelse(.x == 0, .5, .x)),
+           across(titer, log10)) |> 
+    gam(titer ~ s(age, k = k), data = _) |> 
+    predict4(list(age = seq(0, 70, le = n))) |> 
+    with({
+      plot(age, fit, type = "n", ylim = ylim, yaxt = "n",
+           xlab = age_lab, ylab = titer_lab)
+      polygon3(age, ll, ul, col = col)
+      lines(age, fit)
+    })
+  abline(h = log10(c(150, 200)), col = 2:3, lty = 2)
+  logaxis(2, 0:5)
+}
+```
+
+```{r}
+dataset |> 
+  filter(region == "north", time_point == "T1") |> 
+  plot_titers_age(k = 50)
+```
+
+```{r}
+dataset |> 
+  filter(region == "north", time_point == "T2") |> 
+  plot_titers_age(k = 50)
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T1") |> 
+  plot_titers_age(k = 50)
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T2") |> 
+  plot_titers_age(k = 50)
+```
+
+```{r}
+dataset |> 
+  filter(region == "south", time_point == "T3") |> 
+  plot_titers_age(k = 50)
 ```
 
 
@@ -1358,6 +1473,8 @@ par(opar)
 
 A tuning of the `predict2()` function:
 
+**TO DO:** rewrite it as a function of `predict4()`
+
 ```{r}
 predict3 <- function(model, x = seq(0, 70, le = 512), ci = .95) {
   bind_cols(tibble(x  = x),
@@ -1392,7 +1509,7 @@ plot_pred <- function(pred, ylim = NULL, col = 4, ...) {
 }
 ```
 
-where `pred` is an output of the `predict3()` function. A wrapper around the
+where `pred` is an output of the `predict4()` function. A wrapper around the
 `predict3()`, `plot_pred()` and `add_ribbon()` functions:
 
 ```{r}

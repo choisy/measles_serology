@@ -257,9 +257,9 @@ predict2 <- function(...) mgcv::predict.gam(..., type = "response")
 A tuning of the `predict2()` function:
 
 ```{r}
-predict4 <- function(object, newdata, se = .95, ...) {
+predict4 <- function(object, newdata, ci = .95, ...) {
   if (! is.data.frame(newdata)) newdata <- as_tibble(newdata)
-  bind_cols(newdata, as_tibble(predict2(object, newdata, se = .95, ...)))
+  bind_cols(newdata, as_tibble(predict2(object, newdata, se = ci, ...)))
 } 
 ```
 
@@ -1160,7 +1160,7 @@ plot_maternal_immunity <- function(df, remove_age0 = TRUE, k = -1, n = 512, ci =
   
   preds <- tmp |>
     gam(titer ~ s(age, k = k), data = _) |> 
-    predict4(list(age = seq(0, 12, le = n)), se = ci)
+    predict4(list(age = seq(0, 12, le = n)), ci = ci)
     
   plot(1, type = "n", xlim = xlim, ylim = ylim, yaxt = "n",
        xlab = "age (months)", ylab = titer_lab)

@@ -648,6 +648,10 @@ dataset <- north |>
   mutate(region = ifelse(province %in% unique(north$province), "north", "south"))
 ```
 
+```{r include = FALSE, eval = FALSE}
+writexl::write_xlsx(dataset, "measles_serology_all_Vietnam.xlsx")
+```
+
 Checking the thresholds:
 
 ```{r}

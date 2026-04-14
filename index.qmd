@@ -1711,6 +1711,21 @@ of age but also as a function of titers
 * doing clustering on the ANCOVA
 
 ```{r}
+seroprevT1 <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
+  x |> 
+    filter(time_point == "T1") |> 
+    gam3((titer > th) ~ s(age, bs = bs, k = k), data = _) |> 
+    predict3() |> 
+    plot_pred(col = 2)
+  
+  if (title) x |> 
+    pull(province) |> 
+    first() |> 
+    text(35, .2, labels = _)
+}
+```
+
+```{r}
 seroprevT1T2 <- function(x, th = 200, bs = "tp", k = 50, title = FALSE) {
   x |> 
     filter(time_point == "T1") |> 
@@ -1748,6 +1763,10 @@ seroprev3timepoints(south)
 
 ```{r fig-T1T2}
 seroprevT1T2(south)
+```
+
+```{r fig-T1}
+seroprevT1(south)
 ```
 
 ```{r fig-seroprev_provinces_3timepoints, fig.width = 8.4, fig.height = 5 * 8.4 / 7}

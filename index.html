@@ -317,9 +317,9 @@ window.Quarto = {
 </div>
 <p>A tuning of the <code>predict2()</code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>predict4 <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata, <span class="at">se =</span> .<span class="dv">95</span>, ...) {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>predict4 <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata, <span class="at">ci =</span> .<span class="dv">95</span>, ...) {</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span> <span class="fu">is.data.frame</span>(newdata)) newdata <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(newdata)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(newdata, <span class="fu">as_tibble</span>(<span class="fu">predict2</span>(object, newdata, <span class="at">se =</span> .<span class="dv">95</span>, ...)))</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(newdata, <span class="fu">as_tibble</span>(<span class="fu">predict2</span>(object, newdata, <span class="at">se =</span> ci, ...)))</span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>} </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The following function takes a vector <code>v</code> of densities of probabilities as an input and returns a threshold value above which the values of <code>v</code> belong to the <code>p</code> confidence interval:</p>
@@ -1344,7 +1344,7 @@ Figure&nbsp;10: Distributions of titers across regions and time points for the 2
 <span id="cb102-14"><a href="#cb102-14" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb102-15"><a href="#cb102-15" aria-hidden="true" tabindex="-1"></a>  preds <span class="ot">&lt;-</span> tmp <span class="sc">|&gt;</span></span>
 <span id="cb102-16"><a href="#cb102-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam</span>(titer <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
-<span id="cb102-17"><a href="#cb102-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict4</span>(<span class="fu">list</span>(<span class="at">age =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">12</span>, <span class="at">le =</span> n)), <span class="at">se =</span> ci)</span>
+<span id="cb102-17"><a href="#cb102-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict4</span>(<span class="fu">list</span>(<span class="at">age =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">12</span>, <span class="at">le =</span> n)), <span class="at">ci =</span> ci)</span>
 <span id="cb102-18"><a href="#cb102-18" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb102-19"><a href="#cb102-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="dv">1</span>, <span class="at">type =</span> <span class="st">"n"</span>, <span class="at">xlim =</span> xlim, <span class="at">ylim =</span> ylim, <span class="at">yaxt =</span> <span class="st">"n"</span>,</span>
 <span id="cb102-20"><a href="#cb102-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"age (months)"</span>, <span class="at">ylab =</span> titer_lab)</span>
@@ -1817,7 +1817,7 @@ Figure&nbsp;10: Distributions of titers across regions and time points for the 2
 <span id="cb138-6"><a href="#cb138-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_pred</span>()</span>
 <span id="cb138-7"><a href="#cb138-7" aria-hidden="true" tabindex="-1"></a><span class="fu">abline3</span>(<span class="at">h =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">9</span> <span class="sc">/</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-gam_seroprev" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-gam_seroprev" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-gam_seroprev-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-gam_seroprev-1.png" id="fig-gam_seroprev" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1833,7 +1833,7 @@ Figure&nbsp;11
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_seroprevalences</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-gam_seroprev2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-gam_seroprev2" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-gam_seroprev2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-gam_seroprev2-1.png" id="fig-gam_seroprev2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -1856,7 +1856,7 @@ Figure&nbsp;12
 <span id="cb140-7"><a href="#cb140-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_seroprevalences</span>(south)</span>
 <span id="cb140-8"><a href="#cb140-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-titers_seroprevalences" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-titers_seroprevalences" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-titers_seroprevalences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-titers_seroprevalences-1.png" id="fig-titers_seroprevalences" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -2024,39 +2024,53 @@ Attaching package: 'MASS'</code></pre>
 <li><p>doing clustering on the ANCOVA</p></li>
 </ul>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a>seroprevT1T2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">th =</span> <span class="dv">200</span>, <span class="at">bs =</span> <span class="st">"tp"</span>, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">title =</span> <span class="cn">FALSE</span>) {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a>seroprevT1 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">th =</span> <span class="dv">200</span>, <span class="at">bs =</span> <span class="st">"tp"</span>, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">title =</span> <span class="cn">FALSE</span>) {</span>
 <span id="cb159-2"><a href="#cb159-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
 <span id="cb159-3"><a href="#cb159-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T1"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb159-4"><a href="#cb159-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
 <span id="cb159-5"><a href="#cb159-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb159-6"><a href="#cb159-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_pred</span>(<span class="at">col =</span> <span class="dv">2</span>)</span>
 <span id="cb159-7"><a href="#cb159-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb159-8"><a href="#cb159-8" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
-<span id="cb159-9"><a href="#cb159-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T2"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb159-10"><a href="#cb159-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
-<span id="cb159-11"><a href="#cb159-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb159-12"><a href="#cb159-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">add_ribbon</span>(<span class="dv">3</span>)</span>
-<span id="cb159-13"><a href="#cb159-13" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb159-14"><a href="#cb159-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (title) x <span class="sc">|&gt;</span> </span>
-<span id="cb159-15"><a href="#cb159-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(province) <span class="sc">|&gt;</span> </span>
-<span id="cb159-16"><a href="#cb159-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">first</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb159-17"><a href="#cb159-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">text</span>(<span class="dv">35</span>, .<span class="dv">2</span>, <span class="at">labels =</span> _)</span>
-<span id="cb159-18"><a href="#cb159-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb159-8"><a href="#cb159-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (title) x <span class="sc">|&gt;</span> </span>
+<span id="cb159-9"><a href="#cb159-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(province) <span class="sc">|&gt;</span> </span>
+<span id="cb159-10"><a href="#cb159-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">first</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb159-11"><a href="#cb159-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">text</span>(<span class="dv">35</span>, .<span class="dv">2</span>, <span class="at">labels =</span> _)</span>
+<span id="cb159-12"><a href="#cb159-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb160"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a>seroprev3timepoints <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">th =</span> <span class="dv">200</span>, <span class="at">bs =</span> <span class="st">"tp"</span>, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">title =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">seroprevT1T2</span>(x, th, bs, k, title)</span>
-<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
-<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T3"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb160-5"><a href="#cb160-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
-<span id="cb160-6"><a href="#cb160-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb160-7"><a href="#cb160-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">add_ribbon</span>(<span class="dv">4</span>)  </span>
-<span id="cb160-8"><a href="#cb160-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb160"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a>seroprevT1T2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">th =</span> <span class="dv">200</span>, <span class="at">bs =</span> <span class="st">"tp"</span>, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">title =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
+<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T1"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
+<span id="cb160-5"><a href="#cb160-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb160-6"><a href="#cb160-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_pred</span>(<span class="at">col =</span> <span class="dv">2</span>)</span>
+<span id="cb160-7"><a href="#cb160-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb160-8"><a href="#cb160-8" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
+<span id="cb160-9"><a href="#cb160-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T2"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb160-10"><a href="#cb160-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
+<span id="cb160-11"><a href="#cb160-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb160-12"><a href="#cb160-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">add_ribbon</span>(<span class="dv">3</span>)</span>
+<span id="cb160-13"><a href="#cb160-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb160-14"><a href="#cb160-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (title) x <span class="sc">|&gt;</span> </span>
+<span id="cb160-15"><a href="#cb160-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(province) <span class="sc">|&gt;</span> </span>
+<span id="cb160-16"><a href="#cb160-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">first</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb160-17"><a href="#cb160-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">text</span>(<span class="dv">35</span>, .<span class="dv">2</span>, <span class="at">labels =</span> _)</span>
+<span id="cb160-18"><a href="#cb160-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprev3timepoints</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a>seroprev3timepoints <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">th =</span> <span class="dv">200</span>, <span class="at">bs =</span> <span class="st">"tp"</span>, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">title =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb161-2"><a href="#cb161-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">seroprevT1T2</span>(x, th, bs, k, title)</span>
+<span id="cb161-3"><a href="#cb161-3" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
+<span id="cb161-4"><a href="#cb161-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(time_point <span class="sc">==</span> <span class="st">"T3"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb161-5"><a href="#cb161-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gam3</span>((titer <span class="sc">&gt;</span> th) <span class="sc">~</span> <span class="fu">s</span>(age, <span class="at">bs =</span> bs, <span class="at">k =</span> k), <span class="at">data =</span> _) <span class="sc">|&gt;</span> </span>
+<span id="cb161-6"><a href="#cb161-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">predict3</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb161-7"><a href="#cb161-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">add_ribbon</span>(<span class="dv">4</span>)  </span>
+<span id="cb161-8"><a href="#cb161-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb162"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprev3timepoints</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-T1T2T3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-T1T2T3" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-T1T2T3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-T1T2T3-1.png" id="fig-T1T2T3" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -2069,9 +2083,9 @@ Figure&nbsp;14
 </div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb162"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprevT1T2</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprevT1T2</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-T1T2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="537.6">
+<div id="fig-T1T2" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-T1T2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-T1T2-1.png" id="fig-T1T2" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
@@ -2084,20 +2098,14 @@ Figure&nbsp;15
 </div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">12</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
-<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
-<span id="cb163-3"><a href="#cb163-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(province <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb163-4"><a href="#cb163-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province) <span class="sc">|&gt;</span> </span>
-<span id="cb163-5"><a href="#cb163-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb163-6"><a href="#cb163-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(seroprev3timepoints, <span class="at">title =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb163-7"><a href="#cb163-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb164"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seroprevT1</span>(south)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-seroprev_provinces_3timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="806.4">
+<div id="fig-T1" class="quarto-float quarto-figure quarto-figure-center anchored" width="537.6" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-seroprev_provinces_3timepoints-1.png" id="fig-seroprev_provinces_3timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
+<div aria-describedby="fig-T1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-T1-1.png" id="fig-T1" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="537">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-T1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;16
 </figcaption>
 </figure>
@@ -2105,21 +2113,42 @@ Figure&nbsp;16
 </div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb164"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">12</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
-<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
-<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(province <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb164-4"><a href="#cb164-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province) <span class="sc">|&gt;</span> </span>
-<span id="cb164-5"><a href="#cb164-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb164-6"><a href="#cb164-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(plot_age_profile, <span class="dv">200</span>)</span>
-<span id="cb164-7"><a href="#cb164-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">12</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(province <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province) <span class="sc">|&gt;</span> </span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(seroprev3timepoints, <span class="at">title =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb165-7"><a href="#cb165-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-seroprev_provinces" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" width="806.4">
+<div id="fig-seroprev_provinces_3timepoints" class="quarto-float quarto-figure quarto-figure-center anchored" width="806.4" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="index_files/figure-html/fig-seroprev_provinces_3timepoints-1.png" id="fig-seroprev_provinces_3timepoints" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-seroprev_provinces_3timepoints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb166"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb166-1"><a href="#cb166-1" aria-hidden="true" tabindex="-1"></a>opar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">3</span>), <span class="at">plt =</span> <span class="fu">c</span>(.<span class="dv">12</span>, .<span class="dv">97</span>, .<span class="dv">18</span>, .<span class="dv">95</span>))</span>
+<span id="cb166-2"><a href="#cb166-2" aria-hidden="true" tabindex="-1"></a>south <span class="sc">|&gt;</span> </span>
+<span id="cb166-3"><a href="#cb166-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter_out</span>(province <span class="sc">==</span> <span class="st">"Kien Giang"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb166-4"><a href="#cb166-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province) <span class="sc">|&gt;</span> </span>
+<span id="cb166-5"><a href="#cb166-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_split</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb166-6"><a href="#cb166-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(plot_age_profile, <span class="dv">200</span>)</span>
+<span id="cb166-7"><a href="#cb166-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(opar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-seroprev_provinces" class="quarto-float quarto-figure quarto-figure-center anchored" width="806.4" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-seroprev_provinces-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="index_files/figure-html/fig-seroprev_provinces-1.png" id="fig-seroprev_provinces" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" width="806">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-seroprev_provinces-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;17
+Figure&nbsp;18
 </figcaption>
 </figure>
 </div>
